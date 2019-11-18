@@ -1,0 +1,18 @@
+{% extends "library/base.html" %}
+
+{% block content %}
+    <h1>Tsinghua Library Home</h1>
+
+    <p>Welcome to <em>Tsinghua Library</em>, a very basic Django website.</p>
+
+    <h2>Dynamic content</h2>
+
+    <p>The library has the following record counts:</p>
+    <ul>
+        <li><strong>书籍总数：</strong> {{ num_books }}</li>
+        <li><strong>借出书籍数量:</strong> {{ num_borrowed_books }}</li>
+        <li><strong>在架书籍数量：</strong> {{ num_in_books }}</li>
+        {% comment %} <li><strong>Authors:</strong> {{ num_authors }}</li> {% endcomment %}
+    </ul>
+
+{% endblock %}
