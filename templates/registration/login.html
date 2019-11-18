@@ -1,0 +1,48 @@
+{% extends "library/base.html" %}
+
+{% block content %}
+
+    {% if form.errors %}
+        <p>Your username and password didn't match. Please try again.</p>
+    {% endif %}
+
+    {% if next %}
+        {% if user.is_authenticated %}
+            <p>Your account doesn't have access to this page. To proceed,
+                please login with an account that has access.</p>
+        {% else %}
+            <p>Please login to see this page.</p>
+        {% endif %}
+    {% endif %}
+
+    <form class="form-horizontal" method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div class="form-group form-group-lg">
+            <div class="col-sm-3 control-label">
+                <td>{{ form.username.label_tag }}</td>
+            </div>
+            <div class="col-sm-10">
+                <input id="uemail" type="text" name="uemail" value="邮箱">
+                {#                <td>{{ form.username }}</td>#}
+            </div>
+        </div>
+        <div class="form-group form-group-lg">
+            <div class="col-sm-3 control-label">
+                <td>{{ form.password.label_tag }}</td>
+            </div>
+            <div class="col-sm-10">
+                <td>{{ form.password }}</td>
+            </div>
+        </div>
+
+        <div class="row">
+            <input type="submit" value="登录" class="btn btn-primary"/>
+            <input type="hidden" name="next" value="{{ next }}"/>
+            <p class="btn btn-light"><a href="{% url 'password_reset' %}">忘记密码</a></p>
+        </div>
+    </form>
+
+    {# Assumes you setup the password_reset view in your URLconf #}
+
+{% endblock %}

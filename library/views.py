@@ -1,7 +1,10 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render
+from django.urls import reverse_lazy
 from django.views import generic
-from django.shortcuts import render, get_object_or_404
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
+
 from .models import *
-from django.template import loader
 
 
 # Create your views here.
@@ -40,3 +43,35 @@ class BookListView(generic.ListView):
 class BookDetailView(generic.DetailView):
     # pass
     model = Book
+
+
+# @login_required
+class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
+    model = Bookcopy
+    paginate_by = 10
+    template_name = 'library/bookinstance_list_borrowed_user.html'
+
+    # borrow_list = request.
+
+    def get_queryset(self):
+        # borrow_list = Bookcopy.borrow_set.filter
+        # self.user = get_object_or_404(User, id = self.kwargs['id'])
+        # borrow_ids = Borrow.filter(id=self.request.user).filter(isfinished = False).values_list('bcid', flat=True)
+        # Bookcopy.objects.filter(bcid__in=borrow_ids)
+        # return Bookcopy.
+        return Bookcopy.objects.filter(status__exact='o').filter(borrow__id=self.request.user)
+
+
+class BookCreate(PermissionsMixin, CreateView):
+    model = Book
+    fields = '__all__'
+
+
+class BookUpdate(PermissionsMixin, UpdateView):
+    model = Book
+    fields = '__all__'
+
+
+class BookDelete(PermissionsMixin, DeleteView):
+    model = Book
+    success_url = reverse_lazy('books')

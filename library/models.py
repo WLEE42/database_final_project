@@ -1,25 +1,79 @@
+from __future__ import unicode_literals
+
+from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.urls import reverse
+from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
+
+from .managers import UserManager
 
 
 # Create your models here.
 
 
-class Manager(models.Model):
-    mid = models.CharField(max_length=10, primary_key=True)
-    mpass = models.CharField(max_length=32)
-    mname = models.CharField(max_length=10)
-    madress = models.CharField(max_length=100)
-    mphone = models.CharField(max_length=11)
+class User(AbstractBaseUser, PermissionsMixin):
+    uemail = models.EmailField(_('email address'), unique=True)
+    uname = models.CharField(_('user name'), max_length=30, blank=True)
+    date_joined = models.DateTimeField(_('date joined'), default=now)
+    is_active = models.BooleanField(_('active'), default=True)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'uemail'
+    REQUIRED_FIELDS = []
+
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
+
+    def get_name(self):
+        '''Return name'''
+
+    def __str__(self):
+        return self.uemail
+
+    def get_full_name(self):
+        '''
+        Returns the first_name plus the last_name, with a space in between.
+        '''
+        return self.uname
+        # full_name = '%s %s' % (self.first_name, self.last_name)
+        # return full_name.strip()
+
+    def get_short_name(self):
+        '''
+        Returns the short name for the user.
+        '''
+        return self.uname
+        # return self.first_name
+
+    # def email_user(self, subject, message, from_email=None, **kwargs):
+    #     '''
+    #     Sends an email to this User.
+    #     '''
+    #     send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
-class User(models.Model):
-    uid = models.CharField(max_length=10, primary_key=True)
-    upass = models.CharField(max_length=32)
-    uname = models.CharField(max_length=10)
-    uclass = models.CharField(max_length=100)
-    umoney = models.DecimalField(max_digits=5, decimal_places=2)
-    umail = models.EmailField(max_length=30)
+# class Manager(models.Model):
+#     mid = models.CharField(max_length=10, primary_key=True)
+#     mpass = models.CharField(max_length=32)
+#     mname = models.CharField(max_length=10)
+#     madress = models.CharField(max_length=100)
+#     mphone = models.CharField(max_length=11)
+#
+#
+# class User(models.Model):
+#     uid = models.CharField(max_length=10, primary_key=True)
+#     upass = models.CharField(max_length=32)
+#     uname = models.CharField(max_length=10)
+#     uclass = models.CharField(max_length=100)
+#     umoney = models.DecimalField(max_digits=5, decimal_places=2)
+#     umail = models.EmailField(max_length=30)
 
 
 class Room(models.Model):
@@ -89,10 +143,11 @@ class Borrow(models.Model):
     boid = models.AutoField(max_length=15, primary_key=True)
     lenddate = models.DateField(verbose_name="借出时间")
     returndate = models.DateField(null=True)
-    expectdate = models.DateField(null=True)
+    isfinished = models.BooleanField(default=False)
+    # expectdate = models.DateField(null=True)
     pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
-    bcid = models.ForeignKey(Bookcopy, null=True)
-    uid = models.ForeignKey(User, null=True)
+    bcid = models.ForeignKey(Bookcopy, null=True, related_name="borrow")
+    id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
 # class Penalty(models.Model):
 #     """罚款记录"""
