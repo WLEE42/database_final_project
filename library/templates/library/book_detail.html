@@ -1,25 +1,35 @@
-{% extends "base_generic.html" %}
+{% extends "library/base.html" %}
 
 {% block content %}
-    <h1>Title: {{ book.bname }}</h1>
+    <h1>书名: {{ book.bname }}</h1>
 
-    <p><strong>Author:</strong> {{ book.bauthor }}</p> <!-- author detail link not yet defined -->
-    <p><strong>Summary:</strong> {{ book.bsummary }}</p>
-    <p><strong>Book Id:</strong> {{ book.bid }}</p>
+    <p><strong>作者：</strong> {{ book.bauthor }}</p>
+    <p><strong>摘要：</strong> {{ book.bsummary|linebreaks }}</p>
+    <p><strong>编号：</strong> {{ book.bid }}</p>
+    <img src="{{ book.bimage.url }}" alt="Not found" class="img-thumbnail"/>
     {#    <p><strong>Genre:</strong> {% for genre in book.genre.all %}#}
     {#        {{ genre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>#}
 
     <div style="margin-left:20px;margin-top:20px">
         <h4>Copies</h4>
 
-        {% for copy in book.bookcopy_set.all %}
+        {% for copy in book.bookcopy.all %}
             <hr>
             <p class="{% if copy.status == 'a' %}text-success
             {% elif copy.status == 'm' %}text-danger{% else %}text-warning{% endif %}">
                 {{ copy.get_status_display }}</p>
-            {% if copy.status != 'a' %}<p><strong>Due to be returned:</strong> {{ copy.due_back }}</p>{% endif %}
+            {% if copy.status != 'a' %}<p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>{% endif %}
             {#            <p><strong>Imprint:</strong> {{ copy.imprint }}</p>#}
-            <p class="text-muted"><strong>Id:</strong> {{ copy.borrow_set }}</p>
+            <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
+            {#            <p class="text-muted"><strong>Id:</strong> {{ copy.borrow_set }}</p>#}
+            {% if copy.status == 'a' %}
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.id }}
+                    {#                    {{ form }}#}
+                    <button class="btn btn-primary" type="submit">借书</button>
+                </form>
+            {% endif %}
         {% endfor %}
     </div>
 {% endblock %}

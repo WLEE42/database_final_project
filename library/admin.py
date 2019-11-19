@@ -9,10 +9,10 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
-    list_display = ('uemail', 'is_staff', 'is_active',)
-    list_filter = ('uemail', 'is_staff', 'is_active',)
+    list_display = ('uemail', 'uname', 'is_staff', 'is_active',)
+    list_filter = ('uemail', 'uname', 'is_staff', 'is_active',)
     fieldsets = (
-        (None, {'fields': ('uemail', 'password')}),
+        (None, {'fields': ('uemail', 'uname', 'password')}),
         ('Permissions', {'fields': ('is_staff', 'is_active')}),
         ('Groups', {'fields': ('groups',)}),
     )
@@ -31,7 +31,10 @@ admin.site.register(User, CustomUserAdmin)
 admin.site.register(Borrow)
 
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('bid', 'bname', 'bauthor')
+    list_display = ('bauthor',)
+    list_filter = ('bauthor',)
 
 
 admin.site.register(Book, BookAdmin)
+admin.site.register(Bookcopy)
+admin.site.register(Room)

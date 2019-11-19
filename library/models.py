@@ -31,11 +31,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
-    def get_name(self):
-        '''Return name'''
-
     def __str__(self):
-        return self.uemail
+        return self.uname
 
     def get_full_name(self):
         '''
@@ -80,6 +77,8 @@ class Room(models.Model):
     """Reading Room"""
 
     # Fields
+    def __str__(self):
+        return self.rpos
     rid = models.AutoField(max_length=4, primary_key=True)
     rpos = models.CharField(max_length=30)
     rname = models.CharField(max_length=30)
@@ -91,17 +90,21 @@ class Book(models.Model):
     class Meta:
         ordering = ["bname"]
 
+    def __str__(self):
+        return self.bname
+
     # Fields
     bid = models.AutoField(max_length=10, primary_key=True)
     bname = models.CharField(max_length=10, verbose_name="书名")
     bauthor = models.CharField(max_length=100, verbose_name="作者")
     bpubtime = models.DateField(help_text="出版时间", verbose_name="出版时间")
     bpubcomp = models.CharField(max_length=30, verbose_name="出版社")
+    bimage = models.ImageField(verbose_name="图书封面图", upload_to="photos/%Y/%m/%d", null=True)
     # bcount = models.IntegerField(verbose_name="总数")
     # bincount = models.IntegerField(verbose_name="在架数")
     # isin = models.BooleanField(verbose_name="是否在架", default=1)
     # isordered = models.BooleanField()
-    bsummery = models.TextField(verbose_name="摘要", default="无描述")
+    bsummary = models.TextField(verbose_name="摘要", default="无描述")
 
     def get_absolute_url(self):
         """Return the url to access a particular book instance"""
@@ -116,6 +119,7 @@ class Bookcopy(models.Model):
 
     class Meta:
         ordering = ['status']
+        permissions = (("can_mark_returned", "Mark Book As Returned"),)
 
     # Fields
     bcid = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -127,7 +131,7 @@ class Bookcopy(models.Model):
         ('r', 'Reserved'),
     )
     status = models.CharField(max_length=1, choices=loan_status, blank=True, default='m', help_text='Book availability')
-    bid = models.ForeignKey(Book, on_delete=models.SET_NULL, null=True)
+    bid = models.ForeignKey(Book, on_delete=models.SET_NULL, null=True, related_name='bookcopy')
     rid = models.ForeignKey(Room, null=True)
     # isordered = models.BooleanField()
     # bsummery = models.TextField(verbose_name="摘要", default="无描述")
@@ -141,13 +145,13 @@ class Borrow(models.Model):
         ordering = ["lenddate"]
 
     boid = models.AutoField(max_length=15, primary_key=True)
-    lenddate = models.DateField(verbose_name="借出时间")
-    returndate = models.DateField(null=True)
+    lenddate = models.DateField(verbose_name="借出时间", default=now)
+    returndate = models.DateField(null=True, default=now)
     isfinished = models.BooleanField(default=False)
     # expectdate = models.DateField(null=True)
     pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     bcid = models.ForeignKey(Bookcopy, null=True, related_name="borrow")
-    id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+    id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name="borrow")
 
 # class Penalty(models.Model):
 #     """罚款记录"""

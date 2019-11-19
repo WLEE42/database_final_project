@@ -7,7 +7,18 @@
         <ul>
             {% for book in book_list %}
                 <li>
-                    <a href="{{ book.get_absolute_url }}">{{ book.bname }}</a> ({{ book.bauthor }})
+                    <div class="container">
+                        <div class="media">
+                            <div class="col-md-1 px-0">
+                                <img src="{{ book.bimage.url }}" alt="Not found" class="img-thumbnail"/>
+                                {#                            <img src="images/food1.jpg" class="img-fluid">#}
+                            </div>
+                            <div class="media-body">
+                                <a href="{{ book.get_absolute_url }}">{{ book.bname }}</a> ({{ book.bauthor }})
+                                <p>{{ book.bsummary }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </li>
             {% endfor %}
         </ul>

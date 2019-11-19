@@ -11,7 +11,7 @@
             <p>Your account doesn't have access to this page. To proceed,
                 please login with an account that has access.</p>
         {% else %}
-            <p>Please login to see this page.</p>
+            <p>欢迎登录！</p>
         {% endif %}
     {% endif %}
 
@@ -23,8 +23,8 @@
                 <td>{{ form.username.label_tag }}</td>
             </div>
             <div class="col-sm-10">
-                <input id="uemail" type="text" name="uemail" value="邮箱">
-                {#                <td>{{ form.username }}</td>#}
+                {#                <input id="uemail" type="text" name="uemail" value="邮箱">#}
+                <td>{{ form.username }}</td>
             </div>
         </div>
         <div class="form-group form-group-lg">
@@ -37,9 +37,18 @@
         </div>
 
         <div class="row">
-            <input type="submit" value="登录" class="btn btn-primary"/>
-            <input type="hidden" name="next" value="{{ next }}"/>
-            <p class="btn btn-light"><a href="{% url 'password_reset' %}">忘记密码</a></p>
+            <div class="col-lg-1">
+                <button type="submit" class="btn btn-primary">登录</button>
+            </div>
+            <div class="col-lg-1">
+                <button type="submit" class="btn btn-primary"><a href="{% url 'register' %}">注册</a></button>
+            </div>
+            <div class="col-lg-2">
+                {#            <input type="hidden" name="next" value="{{ next }}"/>#}
+                <button class="btn btn-light"><a href="{% url 'password_reset' %}">忘记密码</a></button>
+            </div>
+            <div class="col-lg-10">
+            </div>
         </div>
     </form>
 

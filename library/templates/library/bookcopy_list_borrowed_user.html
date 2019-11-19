@@ -1,0 +1,32 @@
+{% extends "library/base.html" %}
+
+{% block content %}
+    {% load tz %}
+    <h1>Borrowed books</h1>
+
+    {% if bookcopy_list %}
+        <ul>
+
+            {% for bookinst in bookcopy_list %}
+                <li class="{% if bookinst.borrow.all.0.returndate|utc < now|utc %}text-danger{% endif %}">
+                    <p>
+                        <a href="{% url 'book-detail' bookinst.bid_id %}">{{ bookinst.bid.bname }}
+                            ({{ bookinst.bid.bauthor }})
+                        </a>
+                    </p>
+                    <p>
+                        {{ bookinst.rid.rpos }}
+                    </p>
+                    <p>
+                        {{ bookinst.borrow.all.0.returndate }}
+                    </p>
+                </li>
+                <button class="btn btn-primary">还书</button>
+                <button class="btn btn-primary">续借</button>
+            {% endfor %}
+        </ul>
+
+    {% else %}
+        <p>There are no books borrowed.</p>
+    {% endif %}
+{% endblock %}

@@ -5,53 +5,76 @@
 
     {% block title %}<title>Local Library</title>{% endblock %}
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- 新 Bootstrap4 核心 CSS 文件 -->
     <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
 
-    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
-    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
 
-    <!-- bootstrap.bundle.min.js 用于弹窗、提示、下拉菜单，包含了 popper.min.js -->
-    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcss.com/font-awesome/5.11.2/js/fontawesome.js"></script>
 
-    <!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
-    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcss.com/font-awesome/5.11.2/js/solid.js"></script>
+
+    {#    <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.css">#}
 
     <!-- Add additional CSS in static file -->
     {% load static %}
-    <link rel="stylesheet" href="{% static 'library/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'library/style.css' %}">
 </head>
 
 <body>
 
-<div class="container-fluid">
+<div class="wrapper">
 
-    <div class="row">
-        <div class="col-sm-2">
-            {% block sidebar %}
-                <ul class="sidebar-nav">
-                    <li><a href="{% url 'index' %}">主页</a></li>
-                    <li><a href="{% url 'books' %}">全部书籍</a></li>
+    {#    <div class="row">#}
+    <nav id="sidebar">
+        {% block sidebar %}
+            <div id="sidebar-header">
+                <h3>图书馆管理系统</h3>
+            </div>
+            <ul class="list-unstyled components">
+                <p>数据库大作业</p>
+                <li><a href="{% url 'index' %}">主页</a></li>
+                <li><a href="{% url 'books' %}">全部书籍</a></li>
 
-                    {% if user.is_authenticated %}
-                        <li>User: {{ user.get_username }}</li>
-                        <li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>
-                        <li><a href="{% url 'logout' %}?next={{ request.path }}">Logout</a></li>
-                    {% else %}
-                        <li><a href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
-                    {% endif %}
-                    {#                <li><a href="">All authors</a></li>#}
-                </ul>
+                {% if user.is_authenticated %}
+                    <li><a href="#">{{ user.get_short_name }}</a></li>
+                    <li><a href="#">{{ user.last_login }}</a></li>
+                    <li><a href="{% url 'my-borrowed' %}">我的借书</a></li>
+                    <li><a href="{% url 'logout' %}?next={{ request.path }}">注销</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}?next={{ request.path }}">登录</a></li>
+                {% endif %}
+                {#                <li><a href="">All authors</a></li>#}
+            </ul>
 
-            {% endblock %}
-        </div>
-        <div class="col-sm-10 ">
-            {% block content %}{% endblock %}
-            {% block pagination %}
-                {% if is_paginated %}
-                    <div class="pagination">
+            <ul class="list-unstyled CTAs">
+                <li>
+                    <a href="https://github.com/Xraylwq/database_final_project" class="download">Github Page</a>
+                </li>
+                {#                <li>#}
+                {#                    <a href="https://bootstrapious.com/p/bootstrap-sidebar" class="article">Back to article</a>#}
+                {#                </li>#}
+            </ul>
+
+        {% endblock %}
+    </nav>
+    {#        <div class="col-sm-10 ">#}
+    <div id="content">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+
+                <button type="button" id="sidebarCollapse" class="btn btn-info">
+                    <i class="fas fa-align-left"></i>
+                    <span>Toggle Sidebar</span>
+                </button>
+
+            </div>
+        </nav>
+        {% block content %}{% endblock %}
+        {% block pagination %}
+            {% if is_paginated %}
+                <div class="pagination">
           <span class="page-links">
               {% if page_obj.has_previous %}
                   <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">previous</a>
@@ -63,13 +86,28 @@
                   <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">next</a>
               {% endif %}
           </span>
-                    </div>
-                {% endif %}
-            {% endblock %}
-        </div>
+                </div>
+            {% endif %}
+        {% endblock %}
+        {#        </div>#}
     </div>
 
 </div>
+<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.slim.min.js"></script>
+
+<!-- bootstrap.bundle.min.js 用于弹窗、提示、下拉菜单，包含了 popper.min.js -->
+<script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+
+<!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+        });
+    });
+</script>
 </body>
 
 </html>
