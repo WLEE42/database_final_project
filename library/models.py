@@ -131,8 +131,8 @@ class Bookcopy(models.Model):
         ('r', 'Reserved'),
     )
     status = models.CharField(max_length=1, choices=loan_status, blank=True, default='m', help_text='Book availability')
-    bid = models.ForeignKey(Book, on_delete=models.SET_NULL, null=True, related_name='bookcopy')
-    rid = models.ForeignKey(Room, null=True)
+    bid = models.ForeignKey(Book, on_delete=models.CASCADE, null=True, related_name='bookcopy')
+    rid = models.ForeignKey(Room, on_delete=models.CASCADE, null=True)
     # isordered = models.BooleanField()
     # bsummery = models.TextField(verbose_name="摘要", default="无描述")
     # rid = models.OneToOneField(Room, verbose_name="阅览室编号", null=True)
@@ -150,7 +150,7 @@ class Borrow(models.Model):
     isfinished = models.BooleanField(default=False)
     # expectdate = models.DateField(null=True)
     pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
-    bcid = models.ForeignKey(Bookcopy, null=True, related_name="borrow")
+    bcid = models.ForeignKey(Bookcopy, null=True, on_delete=models.CASCADE, related_name="borrow")
     id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name="borrow")
 
 # class Penalty(models.Model):

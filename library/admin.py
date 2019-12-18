@@ -30,11 +30,28 @@ admin.site.register(User, CustomUserAdmin)
 
 admin.site.register(Borrow)
 
+
+class BookcopyInline(admin.TabularInline):
+    model = Bookcopy
+
+
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('bauthor',)
-    list_filter = ('bauthor',)
+    inlines = [BookcopyInline]
+    list_display = ('bname', 'bauthor',)
+    # list_filter = ('bauthor',)
+    search_fields = ('bnmae',)
+    fieldsets = (
+        ['Main', {
+            'fields': ('bname', 'bauthor'),
+        }],
+        ['Advance', {
+            'classes': ('collapse',),
+            'fields': ('bimage',),
+        }]
+    )
 
 
 admin.site.register(Book, BookAdmin)
-admin.site.register(Bookcopy)
+# admin.site.register([Test])
+# admin.site.register(Bookcopy)
 admin.site.register(Room)

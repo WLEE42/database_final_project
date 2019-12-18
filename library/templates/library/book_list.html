@@ -1,23 +1,20 @@
 {% extends "library/base.html" %}
 
 {% block content %}
-    <h1>Book List</h1>
+    <h1>全部书籍</h1>
 
     {% if book_list %}
-        <ul>
+        <ul class="list-unstyled">
             {% for book in book_list %}
-                <li>
-                    <div class="container">
-                        <div class="media">
-                            <div class="col-md-1 px-0">
-                                <img src="{{ book.bimage.url }}" alt="Not found" class="img-thumbnail"/>
-                                {#                            <img src="images/food1.jpg" class="img-fluid">#}
-                            </div>
-                            <div class="media-body">
-                                <a href="{{ book.get_absolute_url }}">{{ book.bname }}</a> ({{ book.bauthor }})
-                                <p>{{ book.bsummary }}</p>
-                            </div>
-                        </div>
+                <li class="media">
+                    <img src="{{ book.bimage.url }}" alt="Image Not Found"
+                         class="align-self-center myimage2"/>
+                    <div class="media-body">
+                        <a href="{{ book.get_absolute_url }}">
+                            <h5 class="mt-0">{{ book.bname }}</h5>
+                            ({{ book.bauthor }})
+                            <p>{{ book.bsummary }}</p>
+                        </a>
                     </div>
                 </li>
             {% endfor %}

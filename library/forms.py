@@ -50,7 +50,7 @@ from .models import *
 class BookcopyForm(forms.ModelForm):
     class Meta:
         model = Bookcopy
-        fields = ('rid', 'status',)
+        fields = ('rid',)
 
 
 class BookForm(forms.ModelForm):
@@ -61,5 +61,5 @@ class BookForm(forms.ModelForm):
 
 class BorrowForm(forms.ModelForm):
     class Meta:
-        fields = ('id', 'bcid',)
+        fields = ('bcid',)
         model = Borrow

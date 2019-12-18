@@ -3,10 +3,10 @@
 {% block content %}
     <h1>书名: {{ book.bname }}</h1>
 
+    <img src="{{ book.bimage.url }}" alt="Not found" class="img-thumbnail myimage"/>
     <p><strong>作者：</strong> {{ book.bauthor }}</p>
     <p><strong>摘要：</strong> {{ book.bsummary|linebreaks }}</p>
     <p><strong>编号：</strong> {{ book.bid }}</p>
-    <img src="{{ book.bimage.url }}" alt="Not found" class="img-thumbnail"/>
     {#    <p><strong>Genre:</strong> {% for genre in book.genre.all %}#}
     {#        {{ genre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>#}
 
@@ -15,21 +15,82 @@
 
         {% for copy in book.bookcopy.all %}
             <hr>
-            <p class="{% if copy.status == 'a' %}text-success
-            {% elif copy.status == 'm' %}text-danger{% else %}text-warning{% endif %}">
-                {{ copy.get_status_display }}</p>
-            {% if copy.status != 'a' %}<p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>{% endif %}
+            <p class="{% if copy.status == 'a' %}text-success {% elif copy.status == 'm' %}text-danger {% else %}text-warning {% endif %}">
+                {{ copy.get_status_display }}
+            </p>
+            {% if copy.status == 'o' %}
+                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
+            {% endif %}
             {#            <p><strong>Imprint:</strong> {{ copy.imprint }}</p>#}
             <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
             {#            <p class="text-muted"><strong>Id:</strong> {{ copy.borrow_set }}</p>#}
             {% if copy.status == 'a' %}
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.id }}
-                    {#                    {{ form }}#}
-                    <button class="btn btn-primary" type="submit">借书</button>
-                </form>
+                {#                <form>#}
+                {#                    {% csrf_token %}#}
+                {#                    <input type="hidden" id="{{ copy.bcid }}">#}
+                {#                    {{ form }}#}
+                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}">借书</button>
+                {#                </form>#}
             {% endif %}
         {% endfor %}
     </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // using jQuery
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // 这些HTTP方法不要求CSRF包含
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        $(document).ready(function () {
+            $(":button").click(function () {
+                {#var bcid = #}
+                {#var form = new FormData();#}
+                {#form.append("bcid", this.id)#}
+                $.ajax({
+                    url: window.location.href,
+                    type: "post",
+                    data: {
+                        "bcid": this.id
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        {#window.clearInterval(timer)#}
+                        alert("借书成功")
+                    },
+                    error: function (e) {
+                        alert("错误");
+                        {#window.clearInterval(timer)#}
+                    }
+                })
+            })
+        })
+    </script>
 {% endblock %}
