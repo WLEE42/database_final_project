@@ -6,7 +6,6 @@ from django.forms import inlineformset_factory
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.views import generic
-from django.views.generic.edit import FormMixin
 
 from library.forms import CustomUserCreationForm, BorrowForm
 from .models import *
@@ -35,31 +34,34 @@ class BookListView(generic.ListView):
         # Call the base implementation first to get the context
         context = super(BookListView, self).get_context_data(**kwargs)
         # Create any data and add it to the context
-        context['some_data'] = 'This is just some data'
+        # context['some_data'] = 'This is just some data'
         return context
 
 
-class BookDetailView(FormMixin, generic.DetailView):
+class BookDetailView(LoginRequiredMixin, generic.DetailView):
     # pass
     # permission_required = ('book.can_look_detail',)
     model = Book
-    form_class = BorrowForm
+
+    # form_class = BorrowForm
 
     def get_success_url(self):
-        return reverse('my-borrowed', kwargs={})
+        return reverse('book-detail', kwargs={})
 
     def get_context_data(self, **kwargs):
         context = super(BookDetailView, self).get_context_data(**kwargs)
-        context['form'] = self.get_form()
+        #        context['form'] = self.get_form()
         return context
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
-        self.object = self.get_object()
-        form = self.get_form()
+        # self.object = self.get_object()
+        # form = self.get_form()
+        form = BorrowForm(request.POST)
         if form.is_valid():
             post = form.save(commit=False)
+            post.id = self.request.user
             post.returndate = datetime.date.today() + relativedelta(months=3)
             Bookcopy.objects.filter(bcid__exact=post.bcid_id).update(status='o')
             post.save()
