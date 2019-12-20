@@ -2,6 +2,8 @@
 
 {% block content %}
     <form action="." method="post">
+        {% csrf_token %}
         {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">注册</button>
     </form>
 {% endblock %}

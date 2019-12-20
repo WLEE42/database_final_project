@@ -1,42 +1,43 @@
 {% extends "library/base.html" %}
 
 {% block content %}
-    <h1>书名: {{ book.bname }}</h1>
+    {% load tz %}
+    <h1>我的借书</h1>
+    <h1>{{ pemoney }}</h1>
 
-    <img src="{{ book.bimage.url }}" alt="Not found" class="img-thumbnail myimage"/>
-    <p><strong>作者：</strong> {{ book.bauthor }}</p>
-    <p><strong>摘要：</strong> {{ book.bsummary|linebreaks }}</p>
-    <p><strong>编号：</strong> {{ book.bid }}</p>
+    {% if borrow_list %}
+        <ul>
 
-    <div style="margin-left:20px;margin-top:20px">
-        <h4>Copies</h4>
+            {% for borrow_record in borrow_list %}
+                <li class="{% if borrow_record.returndate|utc < now|utc %}text-danger{% endif %}">
+                    <p>
+                        <a href="{% url 'book-detail' borrow_record.bcid.bid.bid %}">{{ borrow_record.bcid.bid.bname }}
+                            ({{ borrow_record.bcid.bid.bauthor }})
+                        </a>
+                    </p>
+                    <p>
+                        {{ borrow_record.bcid.rid.rpos }}
+                    </p>
+                    <p>
+                        {{ borrow_record.returndate }}
+                    </p>
+                    <p>
+                        {{ borrow_record.pemoney }}
+                    </p>
+                </li>
+                <button class="btn btn-primary" id="{{ borrow_record.bcid.bcid }}" actionstatus="return">还书</button>
+                <button class="btn btn-primary" id="{{ borrow_record.bcid.bcid }}" actionstatus="renew">续借</button>
+            {% endfor %}
+        </ul>
 
-        {% for copy in book.bookcopy.all %}
-            <hr>
-            <p class="{% if copy.status == 'a' %}text-success {% elif copy.status == 'm' %}text-danger {% else %}text-warning {% endif %}">
-                {{ copy.get_status_display }}
-            </p>
-            {% if copy.status == 'o' %}
-                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
-                <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
-                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
-            {% endif %}
-            {% if copy.status == 'r' %}
-                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
-                <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
-                <p><strong>已预约</strong></p>
-            {% endif %}
-            {% if copy.status == 'a' %}
-                <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
-                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="a">借书</button>
-            {% endif %}
-        {% endfor %}
-    </div>
+    {% else %}
+        <p>There are no books borrowed.</p>
+    {% endif %}
 {% endblock %}
 
 {% block script %}
     <script>
-        // 从cookie中获取字段
+        // using jQuery
         function getCookie(name) {
             var cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -69,18 +70,18 @@
         });
         $(document).ready(function () {
             $(":button").click(function () {
-                if (this.attr("bookstatus") == "a") {
+                if ($(this).attr("actionstatus") === "renew") {
                     $.ajax({
-                        url: {% url 'book-borrow' book.bid %},
+                        url: {% url 'mybooks-renew' %},
                         type: "post",
                         data: {
                             "bcid": this.id
                         },
                         dataType: 'json',
-                        timeout: 20000,
+                        {#timeout: 20000,#}
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("借书成功")
+                            alert("续借成功")
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
@@ -93,7 +94,7 @@
                     })
                 } else {
                     $.ajax({
-                        url: {% url 'book-reserve' book.bid %},
+                        url: {% url 'mybooks-return' %},
                         type: "post",
                         data: {
                             "bcid": this.id
@@ -102,7 +103,7 @@
                         timeout: 20000,
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("预约成功")
+                            alert("归还成功")
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}

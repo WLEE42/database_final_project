@@ -12,9 +12,13 @@ urlpatterns = [
     # url('^book/(?P<pk>\d+)/update/$', views.book_update, name='book-update'),
     # 我的借书
     url('^mybooks/$', views.LoanedBooksByUserListView.as_view(), name='my-borrowed'),
-    url('^mybooks-return/$', views.mybooks_return, name='my-books-return'),
-    url('^mybooks-renew/$', views.mybooks_renew, name='my-books-renew'),
-    ## 注册和登录
+    url('^mybooks-return/$', views.mybooks_return, name='mybooks-return'),
+    url('^mybooks-renew/$', views.mybooks_renew, name='mybooks-renew'),
+    # 我的预约
+    url('^myreserves/$', views.ReservedBook.as_view(), name='my-reserves'),
+    # 我的罚款
+    url('^mypenalties/$', views.Penalties.as_view(), name='my-penalties'),
+    # 注册和登录
     url('accounts/', include('django.contrib.auth.urls')),
     url('^accounts/register/$', views.register.as_view(), name="register"),
     # url('^book/create/$', views.BookCreate.as_view(), name="book-create"),

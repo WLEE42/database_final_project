@@ -47,19 +47,19 @@ class CustomUserChangeForm(UserChangeForm):
 from .models import *
 
 
-class BookcopyForm(forms.ModelForm):
-    class Meta:
-        model = Bookcopy
-        fields = ('rid',)
-
-
-class BookForm(forms.ModelForm):
-    class Meta:
-        model = Book
-        fields = ('bauthor', 'bname',)
+# class BookcopyForm(forms.ModelForm):
+#     class Meta:
+#         model = Bookcopy
+#         fields = ('rid',)
+#
+#
+# class BookForm(forms.ModelForm):
+#     class Meta:
+#         model = Book
+#         # fields = ('bauthor', 'bname',)
 
 
 class BorrowForm(forms.ModelForm):
     class Meta:
-        fields = ('bcid',)
+        fields = ('bookcopy',)
         model = Borrow
