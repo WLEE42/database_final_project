@@ -5,6 +5,8 @@ from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import *
 
 
+# 管理用户
+
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
@@ -14,7 +16,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('uemail', 'uname', 'password')}),
         ('Permissions', {'fields': ('is_staff', 'is_active')}),
-        ('Groups', {'fields': ('groups',)}),
+        # ('Groups', {'fields': ('groups',)}),
     )
     add_fieldsets = (
         (None, {
@@ -28,30 +30,38 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 
-admin.site.register(Borrow)
 
+# 管理书籍
 
 class BookcopyInline(admin.TabularInline):
     model = Bookcopy
+    min_num = 1
+    extra = 0
+    exclude = ['bcid']
 
 
 class BookAdmin(admin.ModelAdmin):
     inlines = [BookcopyInline]
-    list_display = ('bname', 'bauthor',)
-    # list_filter = ('bauthor',)
-    search_fields = ('bnmae',)
+    list_display = ('bname', 'bauthor', 'bpubtime')
+    list_filter = ('bpubcomp',)
+    search_fields = ('bname', 'bauthor')
     fieldsets = (
         ['Main', {
-            'fields': ('bname', 'bauthor'),
+            'fields': ('bname', 'bauthor', 'bpubtime', 'bpubcomp',),
         }],
         ['Advance', {
-            'classes': ('collapse',),
-            'fields': ('bimage',),
+            # 'classes': ('collapse',),
+            'fields': ('bimage', 'bsummary'),
         }]
     )
 
 
 admin.site.register(Book, BookAdmin)
-# admin.site.register([Test])
-# admin.site.register(Bookcopy)
+
+# 管理房间
 admin.site.register(Room)
+
+# 管理借阅、罚款、预约
+admin.site.register(Penalty)
+admin.site.register(Reserve)
+admin.site.register(Borrow)

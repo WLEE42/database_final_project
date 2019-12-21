@@ -19,32 +19,23 @@
                         {{ borrow_record.bookcopy.room.rpos }}
                     </p>
                     <p>
-                        还书时间：{{ borrow_record.returndate }}
+                        {{ borrow_record.returndate }}
                     </p>
-                    {% if borrow_record.isfinished %}
-                        {% if borrow_record.penalty %}
-                            <p> 已还书 </p>
-                            <p>罚金： {{ borrow_record.penalty.pemoney }} </p>
-                        {% else %}
-                            <p> 已还书 </p>
-                            <p>罚金： 0 </p>
-                        {% endif %}
+                    {% if borrow_record.penalty %}
+                        <p>罚金：
+                            {{ borrow_record.penalty.pemoney }}
+                        </p>
+                        <p>已逾期，无法续借</p>
+                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="return">
+                            还书
+                        </button>
                     {% else %}
-                        {% if borrow_record.penalty %}
-                            <p>罚金： {{ borrow_record.penalty.pemoney }} </p>
-                            <p>已逾期，无法续借</p>
-                            <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                    actionstatus="return"> 还书
-                            </button>
-                        {% else %}
-                            <p>罚金： 0 </p>
-                            <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="renew">
-                                续借
-                            </button>
-                            <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                    actionstatus="return"> 还书
-                            </button>
-                        {% endif %}
+                        <p>罚金： 0 </p>
+                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="renew">续借
+                        </button>
+                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="return">
+                            还书
+                        </button>
                     {% endif %}
                 </li>
             {% endfor %}

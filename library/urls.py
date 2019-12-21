@@ -7,8 +7,8 @@ urlpatterns = [
     url('^$', views.index, name='index'),
     url('^books/$', views.BookListView.as_view(), name="books"),
     url('book/(?P<pk>\d+)$', views.BookDetailView.as_view(), name='book-detail'),
-    url('book/(?P<pk>\d+)/borrow$', views.book_borrow, name='book-borrow'),
-    url('book/(?P<pk>\d+)/reserve$', views.book_reserve, name='book-reserve'),
+    url('book/borrow$', views.book_borrow, name='book-borrow'),
+    url('book/reserve$', views.book_reserve, name='book-reserve'),
     # url('^book/(?P<pk>\d+)/update/$', views.book_update, name='book-update'),
     # 我的借书
     url('^mybooks/$', views.LoanedBooksByUserListView.as_view(), name='my-borrowed'),

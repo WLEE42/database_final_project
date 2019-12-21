@@ -22,12 +22,13 @@
                 <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
             {% endif %}
             {% if copy.status == 'r' %}
-                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
-                <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
-                <p><strong>已预约</strong></p>
+                {#                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>#}
+                <p><strong>已预约，未借走</strong></p>
+                <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
+                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
             {% endif %}
             {% if copy.status == 'a' %}
-                <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
+                <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
                 <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="a">借书</button>
             {% endif %}
         {% endfor %}
@@ -36,45 +37,14 @@
 
 {% block script %}
     <script>
-        // 从cookie中获取字段
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        var csrftoken = getCookie('csrftoken');
-
-        function csrfSafeMethod(method) {
-            // 这些HTTP方法不要求CSRF包含
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
-
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
-            }
-        });
         $(document).ready(function () {
             $(":button").click(function () {
-                if (this.attr("bookstatus") == "a") {
+                if ($(this).attr("bookstatus") == "a") {
                     $.ajax({
-                        url: {% url 'book-borrow' book.bid %},
+                        url: "{% url 'book-borrow' %}",
                         type: "post",
                         data: {
-                            "bcid": this.id
+                            "bookcopy": this.id
                         },
                         dataType: 'json',
                         timeout: 20000,
@@ -93,10 +63,10 @@
                     })
                 } else {
                     $.ajax({
-                        url: {% url 'book-reserve' book.bid %},
+                        url: "{% url 'book-reserve' %}",
                         type: "post",
                         data: {
-                            "bcid": this.id
+                            "bookcopy": this.id
                         },
                         dataType: 'json',
                         timeout: 20000,
