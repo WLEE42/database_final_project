@@ -107,12 +107,15 @@ class ReservedBook(LoginRequiredMixin, generic.ListView):
 
 @login_required
 def book_reserve(request):
-    """书籍预约，未完成"""
+    """书籍预约"""
     if request.method == "POST":
         bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
         if bookcopy.status == 'o' or bookcopy.status == 'r':
             # 向Reserve表中添加一条记录
-            Reserve.objects.create(book=bookcopy.book, user=request.user)
+            _, created = Reserve.objects.get_or_create(book=bookcopy.book, user=request.user, isfinished=False)
+            if not created:
+                response = JsonResponse({"error": "不可重复预约"})
+                response.status_code = 403
             # 修改status
             response = JsonResponse({"message": "succ"})
         else:
