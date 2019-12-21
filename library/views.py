@@ -74,11 +74,42 @@ class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
         return borrow_list
 
 
+class Penalties(LoginRequiredMixin, generic.ListView):
+    model = Penalty
+    paginate_by = 10
+    template_name = 'library/penalties_user.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(Penalties, self).get_context_data(**kwargs)
+        for borrow_record in Borrow.objects.filter(user_id__exact=self.request.user.id).filter(isfinished__exact=False):
+            if datetime.date.today() > borrow_record.returndate:
+                # 所有未还书但已逾期的记录
+                Penalty.objects.update_or_create(borrow=borrow_record, user=self.request.user, defaults={
+                    "pedate": borrow_record.returndate,
+                    "pemoney": (datetime.date.today() - borrow_record.returndate).days})
+        # 罚金总和
+        context["pemoney"] = Penalty.objects.filter(user_id__exact=self.request.user.id).filter(
+            isfinished__exact=False).aggregate(Sum("pemoney")).get('pemoney__sum')
+        return context
+
+    def get_queryset(self):
+        return Penalty.objects.filter(user_id__exact=self.request.user.id)
+
+
+class ReservedBook(LoginRequiredMixin, generic.ListView):
+    model = Reserve
+    paginate_by = 10
+    template_name = 'library/reserves_user.html'
+
+    def get_queryset(self):
+        return Reserve.objects.filter(user_id__exact=self.request.user.id)
+
+
 @login_required
 def book_reserve(request):
     """书籍预约，未完成"""
     if request.method == "POST":
-        bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bookcopy'])
+        bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
         if bookcopy.status == 'o' or bookcopy.status == 'r':
             # 向Reserve表中添加一条记录
             Reserve.objects.create(book=bookcopy.book, user=request.user)
@@ -169,47 +200,11 @@ def mybooks_return(request):
         return response
 
 
-class Penalties(LoginRequiredMixin, generic.ListView):
-    model = Penalty
-    paginate_by = 10
-    template_name = 'library/penalties_user.html'
-
-    # # borrow_list = request.
-    # def get_context_data(self, **kwargs):
-    #     context = super(LoanedBooksByUserListView, self).get_context_data(**kwargs)
-    #     for borrow_record in Borrow.objects.filter(user_id__exact=self.request.user.id).filter(isfinished__exact=False):
-    #         if datetime.date.today() > borrow_record.returndate:
-    #             # 所有未还书但已逾期的记录
-    #             Penalty.objects.update_or_create(borrow=borrow_record, user=self.request.user, defaults={
-    #                 "pedate": borrow_record.returndate,
-    #                 "pemoney": (datetime.date.today() - borrow_record.returndate).days})
-    #     # 罚金总和
-    #     context["pemoney"] = Penalty.objects.filter(user_id__exact=self.request.user.id).filter(
-    #         isfinished__exact=False).aggregate(Sum("pemoney")).get('pemoney__sum')
-    #     return context
-
-    def get_queryset(self):
-        return Penalties.objects.filter(user_id__exact=self.request.user.id)
+@login_required
+def reserve_borrow(request):
+    return None
 
 
-class ReservedBook(LoginRequiredMixin, generic.ListView):
-    model = Reserve
-    paginate_by = 10
-    template_name = 'library/reserves_user.html'
-
-    # # borrow_list = request.
-    # def get_context_data(self, **kwargs):
-    #     context = super(LoanedBooksByUserListView, self).get_context_data(**kwargs)
-    #     for borrow_record in Borrow.objects.filter(user_id__exact=self.request.user.id).filter(isfinished__exact=False):
-    #         if datetime.date.today() > borrow_record.returndate:
-    #             # 所有未还书但已逾期的记录
-    #             Penalty.objects.update_or_create(borrow=borrow_record, user=self.request.user, defaults={
-    #                 "pedate": borrow_record.returndate,
-    #                 "pemoney": (datetime.date.today() - borrow_record.returndate).days})
-    #     # 罚金总和
-    #     context["pemoney"] = Penalty.objects.filter(user_id__exact=self.request.user.id).filter(
-    #         isfinished__exact=False).aggregate(Sum("pemoney")).get('pemoney__sum')
-    #     return context
-
-    def get_queryset(self):
-        return Reserve.objects.filter(user_id__exact=self.request.user.id)
+@login_required
+def penalty_pay(request):
+    return None

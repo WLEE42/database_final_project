@@ -164,6 +164,10 @@ class Borrow(models.Model):
 class Penalty(models.Model):
     """罚款记录"""
 
+    class Meta:
+        get_latest_by = "pedate"
+        ordering = ["isfinished", "pedate"]
+
     pid = models.AutoField(max_length=10, primary_key=True)
     pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     pedate = models.DateField(default=now)
@@ -181,12 +185,12 @@ class Reserve(models.Model):
 
     class Meta:
         get_latest_by = "adddate"
-        ordering = ["adddate"]
+        ordering = ["-isbookavailable", "adddate"]
 
     reid = models.AutoField(max_length=10, primary_key=True)
     adddate = models.DateField(verbose_name="添加预约的时间", default=now)
     startdate = models.DateField(verbose_name="预约开始计算的时间", default=now)
-    isbookavaiable = models.BooleanField(default=False)
+    isbookavailable = models.BooleanField(default=False)
     isfinished = models.BooleanField(default=False)
     # lenddate = models.DateField(verbose_name="借出时间", default=now)
     # returndate = models.DateField(null=True, default=now)

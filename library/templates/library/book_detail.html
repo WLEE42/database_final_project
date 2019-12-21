@@ -39,25 +39,25 @@
     <script>
         $(document).ready(function () {
             $(":button").click(function () {
-                if ($(this).attr("bookstatus") == "a") {
+                if ($(this).attr("bookstatus") === "a") {
                     $.ajax({
                         url: "{% url 'book-borrow' %}",
                         type: "post",
                         data: {
-                            "bookcopy": this.id
+                            "bcid": this.id
                         },
                         dataType: 'json',
                         timeout: 20000,
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("借书成功")
+                            alert("借书成功" + data)
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("超时")
+                            {#alert("超时")#}
                         },
                         error: function (e) {
-                            alert("错误");
+                            alert("错误" + e);
                             {#window.clearInterval(timer)#}
                         }
                     })
@@ -66,20 +66,20 @@
                         url: "{% url 'book-reserve' %}",
                         type: "post",
                         data: {
-                            "bookcopy": this.id
+                            "bcid": this.id
                         },
                         dataType: 'json',
                         timeout: 20000,
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("预约成功")
+                            alert("预约成功" + data)
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("超时")
+                            {#alert("超时"+data)#}
                         },
                         error: function (e) {
-                            alert("错误");
+                            alert("错误" + e);
                             {#window.clearInterval(timer)#}
                         }
                     })

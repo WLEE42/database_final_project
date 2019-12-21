@@ -16,8 +16,10 @@ urlpatterns = [
     url('^mybooks-renew/$', views.mybooks_renew, name='mybooks-renew'),
     # 我的预约
     url('^myreserves/$', views.ReservedBook.as_view(), name='my-reserves'),
+    url('^reserve/borrow$', views.reserve_borrow, name='reserve-borrow'),
     # 我的罚款
     url('^mypenalties/$', views.Penalties.as_view(), name='my-penalties'),
+    url('^penalty/pay$', views.penalty_pay, name='penalty-pay'),
     # 注册和登录
     url('accounts/', include('django.contrib.auth.urls')),
     url('^accounts/register/$', views.register.as_view(), name="register"),

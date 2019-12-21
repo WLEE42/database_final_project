@@ -2,40 +2,33 @@
 
 {% block content %}
     {% load tz %}
-    <h1>我的借书</h1>
-    <h4>总罚金：{{ pemoney }}</h4>
+    <h1>我的预约</h1>
 
-    {% if borrow_list %}
+    {% if reserve_list %}
         <ul>
-
-            {% for borrow_record in borrow_list %}
-                <li class="{% if borrow_record.returndate|utc < now|utc %}text-danger{% endif %}">
+            {% for reserve_record in reserve_list %}
+                <li>
+                    {#                    <p>#}
+                    {#                        <a href="{% url 'book-detail' penalty_record.bookcopy.book.bid %}">{{ penalty_record.bookcopy.book.bname }}#}
+                    {#                            ({{ penalty_record.bookcopy.book.bauthor }})#}
+                    {#                        </a>#}
+                    {#                    </p>#}
                     <p>
-                        <a href="{% url 'book-detail' borrow_record.bookcopy.book.bid %}">{{ borrow_record.bookcopy.book.bname }}
-                            ({{ borrow_record.bookcopy.book.bauthor }})
-                        </a>
+                        {{ reserve_record.book.bname }}
                     </p>
                     <p>
-                        {{ borrow_record.bookcopy.room.rpos }}
+                        {{ reserve_record.book.bauthor }}
                     </p>
                     <p>
-                        {{ borrow_record.returndate }}
+                        {{ reserve_record.adddate }}
                     </p>
-                    {% if borrow_record.penalty %}
-                        <p>罚金：
-                            {{ borrow_record.penalty.pemoney }}
-                        </p>
-                        <p>已逾期，无法续借</p>
-                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="return">
-                            还书
+                    {% if reserve_record.isbookavailable %}
+                        <p>书籍可以借阅</p>
+                        <button class="btn btn-primary" id="{{ reserve_record.pid }}">
+                            借阅
                         </button>
                     {% else %}
-                        <p>罚金： 0 </p>
-                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="renew">续借
-                        </button>
-                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="return">
-                            还书
-                        </button>
+                        <p>书籍不可借阅</p>
                     {% endif %}
                 </li>
             {% endfor %}
@@ -50,52 +43,27 @@
     <script>
         $(document).ready(function () {
             $(":button").click(function () {
-                if ($(this).attr("actionstatus") === "renew") {
-                    $.ajax({
-                        url: {% url 'mybooks-renew' %},
-                        type: "post",
-                        data: {
-                            "bcid": this.id
-                        },
-                        dataType: 'json',
-                        {#timeout: 20000,#}
-                        success: function (data) {
-                            {#window.clearInterval(timer)#}
-                            alert("续借成功")
-                        },
-                        complete: function (data) {
-                            {#window.clearInterval(timer)#}
-                            alert("超时")
-                        },
-                        error: function (e) {
-                            alert("错误");
-                            {#window.clearInterval(timer)#}
-                        }
-                    })
-                } else {
-                    $.ajax({
-                        url: {% url 'mybooks-return' %},
-                        type: "post",
-                        data: {
-                            "bcid": this.id
-                        },
-                        dataType: 'json',
-                        timeout: 20000,
-                        success: function (data) {
-                            {#window.clearInterval(timer)#}
-                            alert("归还成功")
-                        },
-                        complete: function (data) {
-                            {#window.clearInterval(timer)#}
-                            alert("超时")
-                        },
-                        error: function (e) {
-                            alert("错误");
-                            {#window.clearInterval(timer)#}
-                        }
-                    })
-                }
-
+                $.ajax({
+                    url: {% url 'reserve-borrow' %},
+                    type: "post",
+                    data: {
+                        "penalty": this.id
+                    },
+                    dataType: 'json',
+                    timeout: 20000,
+                    success: function (data) {
+                        {#window.clearInterval(timer)#}
+                        alert("归还成功" + data)
+                    },
+                    complete: function (data) {
+                        {#window.clearInterval(timer)#}
+                        {#alert("超时")#}
+                    },
+                    error: function (e) {
+                        alert("错误" + e);
+                        {#window.clearInterval(timer)#}
+                    }
+                })
             })
         })
     </script>
