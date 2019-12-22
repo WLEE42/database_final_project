@@ -18,7 +18,7 @@
             </p>
             {% if copy.status == 'o' %}
                 <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
-                <p class="text-muted"><strong>位置：</strong> {{ copy.rid }}</p>
+                <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
                 <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
             {% endif %}
             {% if copy.status == 'r' %}
@@ -44,20 +44,23 @@
                         url: "{% url 'book-borrow' %}",
                         type: "post",
                         data: {
-                            "bcid": this.id
+                            "bookcopy": this.id
                         },
                         dataType: 'json',
                         timeout: 20000,
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("借书成功" + data)
+                            alert("借书成功" + data['message'])
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
                             {#alert("超时")#}
                         },
-                        error: function (e) {
-                            alert("错误" + e);
+                        error: function (jqXHR, textStatus, err) {
+                            // jqXHR: jQuery增强的xhr
+                            // textStatus: 请求完成状态
+                            // err: 底层通过throw抛出的异常对象，值与错误类型有关
+                            alert("错误" + e['error']);
                             {#window.clearInterval(timer)#}
                         }
                     })
@@ -72,14 +75,14 @@
                         timeout: 20000,
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("预约成功" + data)
+                            alert("预约成功" + data['message'])
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
                             {#alert("超时"+data)#}
                         },
                         error: function (e) {
-                            alert("错误" + e);
+                            alert("错误" + e['error']);
                             {#window.clearInterval(timer)#}
                         }
                     })

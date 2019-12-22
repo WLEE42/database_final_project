@@ -45,13 +45,13 @@
                     url: {% url 'penalty-pay' %},
                     type: "post",
                     data: {
-                        "penalty": this.id
+                        "pid": this.id
                     },
                     dataType: 'json',
                     timeout: 20000,
                     success: function (data) {
                         {#window.clearInterval(timer)#}
-                        alert("归还成功" + data)
+                        alert("归还成功" + data['message'])
                     },
                     complete: function (data) {
                         {#window.clearInterval(timer)#}
