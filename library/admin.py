@@ -64,4 +64,33 @@ admin.site.register(Room)
 # 管理借阅、罚款、预约
 admin.site.register(Penalty)
 admin.site.register(Reserve)
-admin.site.register(Borrow)
+
+
+class BorrowAdmin(admin.ModelAdmin):
+    list_display = ('boid', 'get_uname', 'lenddate', 'get_bname', 'isfinished')
+
+    # list_filter = ('bpubcomp',)
+    # search_fields = ('bname', 'bauthor')
+    # fieldsets = (
+    #     ['Main', {
+    #         'fields': ('boid', 'bauthor', 'bpubtime', 'bpubcomp',),
+    #     }],
+    # ['Advance', {
+    #     # 'classes': ('collapse',),
+    #     'fields': ('bimage', 'bsummary'),
+    # }]
+    # )
+    def get_uname(self, borrow):
+        return borrow.user.uname
+
+    get_uname.admin_order_field = 'uname'  # Allows column order sorting
+    get_uname.short_description = '借书者'  # Renames column head
+
+    def get_bname(self, borrow):
+        return borrow.bookcopy.book.bname
+
+    get_bname.admin_order_field = 'bname'  # Allows column order sorting
+    get_bname.short_description = '书籍名'  # Renames column head
+
+
+admin.site.register(Borrow, BorrowAdmin)

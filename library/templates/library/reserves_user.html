@@ -53,14 +53,15 @@
                     timeout: 20000,
                     success: function (data) {
                         {#window.clearInterval(timer)#}
-                        alert("归还成功" + data)
+                        {#alert("归还成功" + data)#}
+                        alert(data["message"])
                     },
                     complete: function (data) {
                         {#window.clearInterval(timer)#}
                         {#alert("超时")#}
                     },
                     error: function (e) {
-                        alert("错误" + e);
+                        {#alert("错误" + e);#}
                         {#window.clearInterval(timer)#}
                     }
                 })

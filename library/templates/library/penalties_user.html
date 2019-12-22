@@ -51,7 +51,8 @@
                     timeout: 20000,
                     success: function (data) {
                         {#window.clearInterval(timer)#}
-                        alert("归还成功" + data['message'])
+                        {#alert("归还成功" + data['message'])#}
+                        alert(data["message"])
                     },
                     complete: function (data) {
                         {#window.clearInterval(timer)#}

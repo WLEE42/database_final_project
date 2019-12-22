@@ -70,7 +70,7 @@
                         {#timeout: 20000,#}
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("续借成功")
+                            alert(data["message"])
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
@@ -92,7 +92,9 @@
                         timeout: 20000,
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("归还成功")
+                            {#if(data['result'] === 'success'){#}
+                            {#    alert()#}
+                            alert(data["message"])
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
