@@ -10,40 +10,76 @@
 
             {% for borrow_record in borrow_list %}
                 <li class="{% if borrow_record.returndate|utc < now|utc %}text-danger{% endif %}">
+                    <hr>
+                    <div id="alert_placeholder{{ borrow_record.bookcopy.bcid }}"></div>
                     <p>
                         <a href="{% url 'book-detail' borrow_record.bookcopy.book.bid %}">{{ borrow_record.bookcopy.book.bname }}
                             ({{ borrow_record.bookcopy.book.bauthor }})
                         </a>
                     </p>
-                    <p>
-                        {{ borrow_record.bookcopy.room.rpos }}
-                    </p>
-                    <p>
-                        还书时间：{{ borrow_record.returndate }}
-                    </p>
+                    <div class="row">
+                        <div class="col-md-4 text-muted">
+                            位置：{{ borrow_record.bookcopy.room.rpos }}
+                        </div>
+                        <div class="col-md-4 text-muted">
+                            还书时间：{{ borrow_record.returndate }}
+                        </div>
+                    </div>
                     {% if borrow_record.isfinished %}
                         {% if borrow_record.penalty %}
-                            <p> 已还书 </p>
-                            <p>罚金： {{ borrow_record.penalty.pemoney }} </p>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    已还书
+                                </div>
+                                <div class="col-md-4">
+                                    罚金： {{ borrow_record.penalty.pemoney }}
+                                </div>
+                            </div>
                         {% else %}
-                            <p> 已还书 </p>
-                            <p>罚金： 0 </p>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    已还书
+                                </div>
+                                <div class="col-md-4">
+                                    罚金： 0
+                                </div>
+                            </div>
                         {% endif %}
                     {% else %}
                         {% if borrow_record.penalty %}
-                            <p>罚金： {{ borrow_record.penalty.pemoney }} </p>
-                            <p>已逾期，无法续借</p>
                             <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
                                     actionstatus="return"> 还书
                             </button>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    罚金： {{ borrow_record.penalty.pemoney }}
+                                </div>
+                                <div class="col-md-3">
+                                    已逾期，无法续借
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
+                                            actionstatus="return"> 还书
+                                    </button>
+                                </div>
+                            </div>
                         {% else %}
-                            <p>罚金： 0 </p>
-                            <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}" actionstatus="renew">
-                                续借
-                            </button>
-                            <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                    actionstatus="return"> 还书
-                            </button>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    罚金： 0
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
+                                            actionstatus="renew">
+                                        续借
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
+                                            actionstatus="return"> 还书
+                                    </button>
+                                </div>
+                            </div>
                         {% endif %}
                     {% endif %}
                 </li>
@@ -58,7 +94,9 @@
 {% block script %}
     <script>
         $(document).ready(function () {
-            $(":button").click(function () {
+            $(".btn.btn-primary").click(function () {
+                {#$("#btn btn-primary").click(function () {#}
+                let bcid = this.id
                 if ($(this).attr("actionstatus") === "renew") {
                     $.ajax({
                         url: {% url 'mybooks-renew' %},
@@ -70,11 +108,12 @@
                         {#timeout: 20000,#}
                         success: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert(data["message"])
+                            {#alert(data["message"])#}
+                            showalert(data["message"], data["result"], bcid)
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("超时")
+                            {#alert("超时")#}
                         },
                         error: function (e) {
                             alert("错误");
@@ -94,11 +133,12 @@
                             {#window.clearInterval(timer)#}
                             {#if(data['result'] === 'success'){#}
                             {#    alert()#}
-                            alert(data["message"])
+                            {#alert(data["message"])#}
+                            showalert(data["message"], data["result"], bcid)
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
-                            alert("超时")
+                            {#alert("超时")#}
                         },
                         error: function (e) {
                             alert("错误");

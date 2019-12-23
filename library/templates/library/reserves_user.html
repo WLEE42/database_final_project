@@ -8,20 +8,19 @@
         <ul>
             {% for reserve_record in reserve_list %}
                 <li>
-                    {#                    <p>#}
-                    {#                        <a href="{% url 'book-detail' penalty_record.bookcopy.book.bid %}">{{ penalty_record.bookcopy.book.bname }}#}
-                    {#                            ({{ penalty_record.bookcopy.book.bauthor }})#}
-                    {#                        </a>#}
-                    {#                    </p>#}
-                    <p>
-                        {{ reserve_record.book.bname }}
-                    </p>
-                    <p>
-                        {{ reserve_record.book.bauthor }}
-                    </p>
-                    <p>
-                        {{ reserve_record.adddate }}
-                    </p>
+                    <hr>
+                    <div id="alert_placeholder{{ reserve_record.reid }}"></div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ reserve_record.book.bname }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ reserve_record.book.bauthor }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ reserve_record.adddate }}
+                        </div>
+                    </div>
                     {% if reserve_record.isbookavailable %}
                         <p>书籍可以借阅</p>
                         <button class="btn btn-primary" id="{{ reserve_record.pid }}">
@@ -42,19 +41,22 @@
 {% block script %}
     <script>
         $(document).ready(function () {
-            $(":button").click(function () {
+            $(".btn.btn-primary").click(function () {
+                let reid = this.id
                 $.ajax({
-                    url: {% url 'reserve-borrow' %},
+                    url: "{% url 'reserve-borrow' %}",
                     type: "post",
                     data: {
-                        "penalty": this.id
+                        "reid": this.id
                     },
                     dataType: 'json',
                     timeout: 20000,
                     success: function (data) {
                         {#window.clearInterval(timer)#}
                         {#alert("归还成功" + data)#}
-                        alert(data["message"])
+                        {#alert(data["message"])#}
+                        {#showalert(data["message"], data["result"])#}
+                        showalert(data["message"], data["result"], reid)
                     },
                     complete: function (data) {
                         {#window.clearInterval(timer)#}

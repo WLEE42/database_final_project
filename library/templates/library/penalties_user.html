@@ -9,25 +9,30 @@
         <ul>
             {% for penalty_record in penalty_list %}
                 <li>
+                    <hr>
+                    <div id="alert_placeholder{{ penalty_record.pid }}"></div>
                     {#                    <p>#}
                     {#                        <a href="{% url 'book-detail' penalty_record.bookcopy.book.bid %}">{{ penalty_record.bookcopy.book.bname }}#}
                     {#                            ({{ penalty_record.bookcopy.book.bauthor }})#}
                     {#                        </a>#}
                     {#                    </p>#}
-                    <p>
-                        {{ penalty_record.pemoney }}
-                    </p>
-                    <p>
-                        {{ penalty_record.pedate }}
-                    </p>
-                    {% if penalty_record.isfinished %}
-                        <p>已交罚金</p>
-                    {% else %}
-                        <p>未交罚金</p>
-                        <button class="btn btn-primary" id="{{ penalty_record.pid }}">
-                            交钱
-                        </button>
-                    {% endif %}
+                    <div class="row">
+                        <div class="col-md-4">
+                            金额：{{ penalty_record.pemoney }}
+                        </div>
+                        <div class="col-md-4">
+                            罚款日期：{{ penalty_record.pedate }}
+                        </div>
+                        {% if penalty_record.isfinished %}
+                            <p>已交罚金</p>
+                            </div>
+                        {% else %}
+                            <p>未交罚金</p>
+                            </div>
+                            <button class="btn btn-primary" id="{{ penalty_record.pid }}">
+                                交钱
+                            </button>
+                        {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -40,9 +45,10 @@
 {% block script %}
     <script>
         $(document).ready(function () {
-            $(":button").click(function () {
+            $(".btn.btn-primary").click(function () {
+                let pid = this.id
                 $.ajax({
-                    url: {% url 'penalty-pay' %},
+                    url: "{% url 'penalty-pay' %}",
                     type: "post",
                     data: {
                         "pid": this.id
@@ -52,7 +58,8 @@
                     success: function (data) {
                         {#window.clearInterval(timer)#}
                         {#alert("归还成功" + data['message'])#}
-                        alert(data["message"])
+                        {#alert(data["message"])#}
+                        showalert(data["message"], data["result"], pid)
                     },
                     complete: function (data) {
                         {#window.clearInterval(timer)#}

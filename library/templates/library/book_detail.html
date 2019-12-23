@@ -13,6 +13,7 @@
 
         {% for copy in book.bookcopy.all %}
             <hr>
+            <div id="alert_placeholder{{ copy.bcid }}"></div>
             <p class="{% if copy.status == 'a' %}text-success {% elif copy.status == 'm' %}text-danger {% else %}text-warning {% endif %}">
                 {{ copy.get_status_display }}
             </p>
@@ -37,8 +38,21 @@
 
 {% block script %}
     <script>
+        /**
+         Bootstrap Alerts -
+         Function Name - showalert()
+         Inputs - message,alerttype
+         Example - showalert("Invalid Login","alert-error")
+         Types of alerts -- "alert-error","alert-success","alert-info","alert-warning"
+         Required - You only need to add a alert_placeholder div in your html page wherever you want to display these alerts "<div id="alert_placeholder"></div>"
+         Written On - 14-Jun-2013
+         **/
+
+
         $(document).ready(function () {
-            $(":button").click(function () {
+            $(".btn.btn-primary").click(function () {
+                {#$("#btn btn-primary").click(function () {#}
+                let bcid = this.id
                 if ($(this).attr("bookstatus") === "a") {
                     $.ajax({
                         url: "{% url 'book-borrow' %}",
@@ -51,7 +65,9 @@
                         success: function (data) {
                             {#window.clearInterval(timer)#}
                             {#alert("借书成功" + data['message'])#}
-                            alert(data["message"])
+                            {#$('#toast').toast('show')#}
+                            {#alert(data["message"])#}
+                            showalert(data["message"], data["result"], bcid)
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}
@@ -77,7 +93,8 @@
                         success: function (data) {
                             {#window.clearInterval(timer)#}
                             {#alert("预约成功" + data['message'])#}
-                            alert(data["message"])
+                            showalert(data["message"], data["result"], bcid)
+                            {#alert(data["message"])#}
                         },
                         complete: function (data) {
                             {#window.clearInterval(timer)#}

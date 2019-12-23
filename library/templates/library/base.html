@@ -100,6 +100,13 @@
     $.ajaxSetup({
         data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
     });
+
+    function showalert(message, alerttype, id) {
+        $('#alert_placeholder' + id).append('<div id="alertdiv" class="alert alert-' + alerttype + '"><a class="close" data-dismiss="alert">×</a><span>' + message + '</span></div>')
+        setTimeout(function () { // this will automatically close the alert and remove this if the users doesnt close it in 5 secs
+            $("#alertdiv").remove();
+        }, 10000);
+    }
 </script>
 
 {% block script %}{% endblock %}
