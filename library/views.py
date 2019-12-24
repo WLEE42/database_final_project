@@ -81,14 +81,14 @@ class Penalties(LoginRequiredMixin, generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super(Penalties, self).get_context_data(**kwargs)
-        for borrow_record in Borrow.objects.filter(user_id__exact=self.request.user.id).filter(isfinished__exact=False):
+        for borrow_record in Borrow.objects.filter(user=self.request.user).filter(isfinished=False):
             if datetime.date.today() > borrow_record.returndate:
                 # 所有未还书但已逾期的记录
                 Penalty.objects.update_or_create(borrow=borrow_record, user=self.request.user, defaults={
                     "pedate": borrow_record.returndate,
                     "pemoney": (datetime.date.today() - borrow_record.returndate).days})
         # 罚金总和
-        context["pemoney"] = Penalty.objects.filter(user_id__exact=self.request.user.id).filter(
+        context["pemoney"] = Penalty.objects.filter(user=self.request.user).filter(
             isfinished__exact=False).aggregate(Sum("pemoney")).get('pemoney__sum')
         return context
 
@@ -102,21 +102,46 @@ class ReservedBook(LoginRequiredMixin, generic.ListView):
     template_name = 'library/reserves_user.html'
 
     def get_queryset(self):
-        return Reserve.objects.filter(user_id__exact=self.request.user.id)
+        for reserve in Reserve.objects.filter(user=self.request.user).filter(status="b_w"):
+            returndate = Borrow.objects.filter(bookcopy__book=reserve.book).first().returndate
+            if not reserve.startdate == returndate:
+                reserve.startdate = returndate
+                reserve.save()
+        return Reserve.objects.filter(user=self.request.user)
 
 
 @login_required
 def book_reserve(request):
     """书籍预约"""
     if request.method == "POST":
-        bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
+        try:
+            bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
+        except Bookcopy.DoesNotExist:
+            response = JsonResponse({"result": "warning", "message": "书籍不存在"})
+            return response
+        if Bookcopy.objects.filter(book=bookcopy.book).filter(status="a").exists():
+            # 有其他可用书籍
+            response = JsonResponse({"result": "warning", "message": "有其他可用书籍"})
+            return response
+        if Borrow.objects.filter(user=request.user).filter(isfinished=False).filter(
+                bookcopy__book=bookcopy.book).exists():
+            # 用户不可在借书的同时预约同一本书
+            response = JsonResponse({"result": "warning", "message": "用户不可在借书的同时预约同一本书"})
+            return response
+        if bookcopy.status == 'r':
+            if Reserve.objects.filter(book=bookcopy.book).filter(user=request.user).filter(status='a_a').exists():
+                # 书籍已可用，请去借书
+                response = JsonResponse({"result": "warning", "message": "书籍已可用，请去借书"})
+                return response
         if bookcopy.status == 'o' or bookcopy.status == 'r':
             # 向Reserve表中添加一条记录
-            _, created = Reserve.objects.get_or_create(book=bookcopy.book, user=request.user, isfinished=False)
+            reserve, created = Reserve.objects.get_or_create(book=bookcopy.book, user=request.user, status='b_w')
             if not created:
                 response = JsonResponse({"result": "warning", "message": "不可重复预约"})
                 return response
-                # response.status_code = 403
+            # 估算预约可用的时间
+            reserve.startdate = Borrow.objects.filter(bookcopy__book=bookcopy.book).earliest().returndate
+            reserve.save()
             # 修改status
             response = JsonResponse({"result": "success", "message": "预约成功"})
         else:
@@ -132,7 +157,13 @@ def book_borrow(request):
         form = BorrowForm(request.POST)
         if form.is_valid():
             borrow = form.save(commit=False)
+            if Borrow.objects.filter(user=request.user).filter(isfinished=False).filter(
+                    bookcopy__book=borrow.bookcopy.book).exists():
+                # 用户不可在借书的同时借同一本书
+                response = JsonResponse({"result": "warning", "message": "用户不可在借书的同时借同一本书"})
+                return response
             if borrow.bookcopy.status == 'a':
+                # 书籍可用
                 borrow.user = request.user
                 borrow.returndate = datetime.date.today() + relativedelta(months=3)
                 # 更改Bookcopy的status
@@ -141,12 +172,8 @@ def book_borrow(request):
                 response = JsonResponse({"result": "success", "message": "借书成功"})
             else:
                 response = JsonResponse({"result": "warning", "message": "书籍不可用"})
-                # response = JsonResponse({"warning": "书籍不可用"})
-                # response.status_code = 403
         else:
             response = JsonResponse({"result": "warning", "message": "bookcopy bcid不正确"})
-            # response = JsonResponse({"warning": "bookcopy bcid不正确"})
-            # response.status_code = 403
     return response
 
 
@@ -158,17 +185,11 @@ def mybooks_renew(request):
             borrow.bookcopy.book.reserve
         except Reserve.DoesNotExist:
             response = JsonResponse({"result": "warning", "message": "该书已被预约，无法续借"})
-            # response = JsonResponse({"warning": "该书已被预约，无法续借"})
-            # response.status_code = 403
         else:
             if borrow.returndate - relativedelta(months=5) > borrow.lenddate:
                 response = JsonResponse({"result": "warning", "message": "最多只能续借六个月"})
-                # response = JsonResponse({"warning": "最多只能续借六个月"})
-                # response.status_code = 403
             elif datetime.date.today() > borrow.returndate:
                 response = JsonResponse({"result": "warning", "message": "已逾期"})
-                # response = JsonResponse({"warning": "已逾期"})
-                # response.status_code = 403
             else:
                 borrow.returndate += relativedelta(months=3)
                 borrow.save()
@@ -182,7 +203,7 @@ def mybooks_return(request):
         bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
         if bookcopy.status == "o":
             borrow = Borrow.objects.filter(isfinished__exact=False).get(bookcopy__exact=bookcopy)
-            # 此时，returndate为应该还书的时间
+            # 此时，returndate为应该还书的时间，通过应还书时间与现在时间计算罚金
             if datetime.date.today() > borrow.returndate:
                 Penalty.objects.update_or_create(borrow=borrow, user=request.user, defaults={
                     "pedate": borrow.returndate,
@@ -191,26 +212,23 @@ def mybooks_return(request):
             borrow.returndate = datetime.date.today()
             borrow.isfinished = True
             try:
-                reserve = Reserve.objects.filter(isfinished__exact=False).filter(isbookavailable__exact=False).filter(
-                    book=bookcopy.book).earliest()
+                reserve = Reserve.objects.filter(status="b_w").filter(book=bookcopy.book).earliest()
             except Reserve.DoesNotExist:
                 # 书籍未被预约
                 bookcopy.status = "a"
             else:
-                # 书籍被预约
+                # 书籍被预约，通知用户
+                # reserve.user.email_user() 未实现
                 bookcopy.status = "r"
                 # 处理预约
-                reserve.isbookavaiable = True
+                reserve.status = "a_a"
                 reserve.startdate = datetime.date.today()
                 reserve.save()
-                # 通知user,未实现
             borrow.save()
             bookcopy.save()
             response = JsonResponse({"result": "success", "message": "还书成功"})
         else:  # maintaince or avaible
-            # response = JsonResponse({"warning": "该书籍未借出"})
             response = JsonResponse({"result": "warning", "message": "该书籍未借出"})
-            # response.status_code = 403
         return response
 
 
@@ -221,19 +239,15 @@ def reserve_borrow(request):
             reserve = Reserve.objects.get(reid__exact=request.POST['reid'])
         except Reserve.DoesNotExist:
             response = JsonResponse({"result": "warning", "message": "记录不存在"})
-            # response = JsonResponse({"warning": "记录不存在"})
-            # response.status_code = 403
             return response
-        if reserve.isfinished == True:
+        if reserve.status == "c_o":
             response = JsonResponse({"result": "warning", "message": "预约已过期"})
-            # response = JsonResponse({"warning": "预约已过期"})
-            # response.status_code = 403
-        elif reserve.isbookavailable:
-            # response = JsonResponse({"warning": "该书未还，无法借阅"})
+        elif reserve.status == "b_w":
             response = JsonResponse({"result": "warning", "message": "该书未还，无法借阅"})
-            # response.status_code = 403
+        elif reserve.status == "d_f":
+            response = JsonResponse({"result": "warning", "message": "预约已完成，不能继续借书"})
         else:
-            reserve.isfinished = True
+            reserve.status = "d_f"
             # 预约完成借阅
             bookcopy = reserve.book.bookcopy_set.filter(status='r').first()
             # first()指被预约的bookcopy中的任意一个
@@ -241,9 +255,9 @@ def reserve_borrow(request):
             # 更新bookcopy的status
             reserve.save()
             bookcopy.save()
+            # 创建borrow记录
             Borrow.objects.create(bookcopy=bookcopy, user=request.user,
                                   returndate=datetime.date.today() + relativedelta(months=3))
-            # 创建borrow记录
             response = JsonResponse({"result": "success", "message": "预约借书成功"})
         return response
 
@@ -252,16 +266,14 @@ def reserve_borrow(request):
 def penalty_pay(request):
     if request.method == "POST":
         try:
-            penalty = Penalty.objects.filter(isfinished__exact=False).get(pid__exact=request.POST['pid'])
+            penalty = Penalty.objects.get(pid__exact=request.POST['pid'])
         except Penalty.DoesNotExist:
             response = JsonResponse({"result": "warning", "message": "记录不存在"})
-            # response = JsonResponse({"warning": "记录不存在"})
-            # response.status_code = 403
             return response
-        if penalty.borrow.isfinished == False:
+        if penalty.isfinished == True:
+            response = JsonResponse({"result": "warning", "message": "罚款已缴纳"})
+        elif penalty.borrow.isfinished == False:
             response = JsonResponse({"result": "warning", "message": "请先还书"})
-            # response = JsonResponse({"warning": "请先还书"})
-            # response.status_code = 403
         else:
             penalty.isfinished = True
             penalty.save()

@@ -67,7 +67,7 @@ admin.site.register(Reserve)
 
 
 class BorrowAdmin(admin.ModelAdmin):
-    list_display = ('boid', 'get_uname', 'lenddate', 'get_bname', 'isfinished')
+    list_display = ('boid', 'get_uname', 'lenddate', 'returndate', 'get_bname', 'isfinished')
 
     # list_filter = ('bpubcomp',)
     # search_fields = ('bname', 'bauthor')

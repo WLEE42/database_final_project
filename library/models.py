@@ -55,30 +55,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     #     send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
-# class Manager(models.Model):
-#     mid = models.CharField(max_length=10, primary_key=True)
-#     mpass = models.CharField(max_length=32)
-#     mname = models.CharField(max_length=10)
-#     madress = models.CharField(max_length=100)
-#     mphone = models.CharField(max_length=11)
-#
-#
-# class User(models.Model):
-#     uid = models.CharField(max_length=10, primary_key=True)
-#     upass = models.CharField(max_length=32)
-#     uname = models.CharField(max_length=10)
-#     uclass = models.CharField(max_length=100)
-#     umoney = models.DecimalField(max_digits=5, decimal_places=2)
-#     umail = models.EmailField(max_length=30)
-
-
 class Room(models.Model):
     """Reading Room"""
 
     # Fields
-    rid = models.AutoField(verbose_name='阅览室编号', max_length=4, primary_key=True)
-    rpos = models.CharField(verbose_name='阅览室位置', max_length=30)
-    rname = models.CharField(verbose_name='阅览室名称', max_length=30)
+    rid = models.AutoField(max_length=4, primary_key=True, verbose_name='阅览室编号')
+    rpos = models.CharField(max_length=30, verbose_name='阅览室位置')
+    rname = models.CharField(max_length=30, verbose_name='阅览室名称')
 
     def __str__(self):
         return "{}".format(self.rpos)
@@ -96,13 +79,8 @@ class Book(models.Model):
     bauthor = models.CharField(max_length=100, verbose_name="作者")
     bpubtime = models.DateField(help_text="出版时间", verbose_name="出版时间")
     bpubcomp = models.CharField(max_length=30, verbose_name="出版社")
-    bimage = models.ImageField(verbose_name="图书封面图", upload_to="photos/%Y/%m/%d", null=True)
-    bsummary = models.TextField(verbose_name="摘要", default="无描述")
-
-    # bcount = models.IntegerField(verbose_name="总数")
-    # bincount = models.IntegerField(verbose_name="在架数")
-    # isin = models.BooleanField(verbose_name="是否在架", default=1)
-    # isordered = models.BooleanField()
+    bimage = models.ImageField(upload_to="photos/%Y/%m/%d", null=True, verbose_name="图书封面图")
+    bsummary = models.TextField(default="无描述", verbose_name="摘要")
 
     def get_absolute_url(self):
         """Return the url to access a particular book instance"""
@@ -117,7 +95,6 @@ class Bookcopy(models.Model):
 
     class Meta:
         ordering = ['status']
-        # permissions = (("can_mark_returned", "Mark Book As Returned"),)
 
     # Fields
     bcid = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -128,32 +105,27 @@ class Bookcopy(models.Model):
         ('a', 'Available'),
         ('r', 'Reserved'),
     )
-    status = models.CharField(max_length=1, choices=loan_status, default='m', help_text='Book availability')
+    status = models.CharField(max_length=1, choices=loan_status, default='a', help_text='Book availability')
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='bookcopy')
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, related_name='bookcopy')
 
     def __str__(self):
-        return str(self.book.bname) + str(self.bcid)
-
-    # isordered = models.BooleanField()
-    # bsummery = models.TextField(verbose_name="摘要", default="无描述")
-    # rid = models.OneToOneField(Room, verbose_name="阅览室编号", null=True)
+        return str(self.book.bname) + " " + str(self.bcid)
 
 
 class Borrow(models.Model):
     """Book Borrow Record"""
 
     class Meta:
-        get_latest_by = "lenddate"
-        ordering = ["isfinished", "-lenddate"]
+        get_latest_by = "returndate"
+        ordering = ["isfinished", "-returndate"]
 
     boid = models.AutoField(max_length=15, primary_key=True)
-    lenddate = models.DateField(verbose_name="借出时间", default=now)
-    returndate = models.DateField(verbose_name="还书时间", default=now)
-    isfinished = models.BooleanField(default=False)
-    # expectdate = models.DateField(null=True)
-    # pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    lenddate = models.DateField(default=now, verbose_name="借出时间")
+    returndate = models.DateField(default=now, verbose_name="还书时间")
+    isfinished = models.BooleanField(default=False, verbose_name="是否已还书")
+
     bookcopy = models.ForeignKey(Bookcopy, on_delete=models.CASCADE, related_name="borrow")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="borrow")
 
@@ -169,11 +141,11 @@ class Penalty(models.Model):
         ordering = ["isfinished", "pedate"]
 
     pid = models.AutoField(max_length=10, primary_key=True)
-    pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
-    pedate = models.DateField(default=now)
-    isfinished = models.BooleanField(default=False)
+    pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="罚款金额")
+    pedate = models.DateField(default=now, verbose_name="罚款开始计算的时间")
+    isfinished = models.BooleanField(default=False, verbose_name="是否提交罚款")
     # one to one
-    borrow = models.OneToOneField(Borrow, related_name="penalty", on_delete=models.CASCADE)
+    borrow = models.OneToOneField(Borrow, on_delete=models.CASCADE, related_name="penalty")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="penalty")
 
     def __str__(self):
@@ -185,17 +157,20 @@ class Reserve(models.Model):
 
     class Meta:
         get_latest_by = "adddate"
-        ordering = ["-isbookavailable", "adddate"]
+        ordering = ["status", "adddate"]
 
     reid = models.AutoField(max_length=10, primary_key=True)
     adddate = models.DateField(verbose_name="添加预约的时间", default=now)
     startdate = models.DateField(verbose_name="预约开始计算的时间", default=now)
-    isbookavailable = models.BooleanField(default=False)
-    isfinished = models.BooleanField(default=False)
-    # lenddate = models.DateField(verbose_name="借出时间", default=now)
-    # returndate = models.DateField(null=True, default=now)
-    # expectdate = models.DateField(null=True)
-    # pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    reserve_status = (
+        ('a_a', 'Book Available'),
+        ('b_w', 'Waited for Book return'),
+        ('c_o', 'Reserve Outdated'),
+        ('d_f', 'Reserve Finished'),
+    )
+    status = models.CharField(max_length=3, choices=reserve_status, default='b_w', verbose_name="预约状态",
+                              help_text='Reserve availability')
+
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="reserve")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reserve")
 

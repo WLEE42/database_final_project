@@ -7,7 +7,6 @@
 
     {% if borrow_list %}
         <ul>
-
             {% for borrow_record in borrow_list %}
                 <li class="{% if borrow_record.returndate|utc < now|utc %}text-danger{% endif %}">
                     <hr>
@@ -17,71 +16,51 @@
                             ({{ borrow_record.bookcopy.book.bauthor }})
                         </a>
                     </p>
-                    <div class="row">
-                        <div class="col-md-4 text-muted">
-                            位置：{{ borrow_record.bookcopy.room.rpos }}
+                    <div id="{{ borrow_record.bookcopy.bcid }}">
+                        <div class="row" id="1">
+                            <div class="col-md-4 text-muted">
+                                位置：{{ borrow_record.bookcopy.room.rpos }}
+                            </div>
+                            <div class="col-md-4 text-muted" id="returndate">
+                                还书时间：{{ borrow_record.returndate }}
+                            </div>
+                            {% if borrow_record.penalty %}
+                                <div class="col-md-4">
+                                    罚金： {{ borrow_record.penalty.pemoney }}
+                                </div>
+                            {% else %}
+                                <div class="col-md-4">
+                                    罚金： 0
+                                </div>
+                            {% endif %}
                         </div>
-                        <div class="col-md-4 text-muted">
-                            还书时间：{{ borrow_record.returndate }}
+                        <div class="row" id="2">
+                            {% if borrow_record.isfinished %}
+                                <div class="col-md-4">
+                                    已还书
+                                </div>
+                            {% else %}
+                                <div class="col-md-4">
+                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
+                                            actionstatus="return"> 还书
+                                    </button>
+                                </div>
+                                {% if borrow_record.penalty %}
+                                    <div class="col-md-3">
+                                        已逾期，无法续借
+                                    </div>
+                                {% else %}
+                                    <div class="col-md-3">
+                                        <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
+                                                actionstatus="renew">
+                                            续借
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
                         </div>
+
                     </div>
-                    {% if borrow_record.isfinished %}
-                        {% if borrow_record.penalty %}
-                            <div class="row">
-                                <div class="col-md-4">
-                                    已还书
-                                </div>
-                                <div class="col-md-4">
-                                    罚金： {{ borrow_record.penalty.pemoney }}
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="row">
-                                <div class="col-md-4">
-                                    已还书
-                                </div>
-                                <div class="col-md-4">
-                                    罚金： 0
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% else %}
-                        {% if borrow_record.penalty %}
-                            <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                    actionstatus="return"> 还书
-                            </button>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    罚金： {{ borrow_record.penalty.pemoney }}
-                                </div>
-                                <div class="col-md-3">
-                                    已逾期，无法续借
-                                </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                            actionstatus="return"> 还书
-                                    </button>
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="row">
-                                <div class="col-md-3">
-                                    罚金： 0
-                                </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                            actionstatus="renew">
-                                        续借
-                                    </button>
-                                </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-primary" id="{{ borrow_record.bookcopy.bcid }}"
-                                            actionstatus="return"> 还书
-                                    </button>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -93,60 +72,71 @@
 
 {% block script %}
     <script>
+        function renewChangeHTML(bcid) {
+            a = $("div#" + bcid).children("div#1").children("div#returndate").text().trim().match(/\d{4}.\d{1,2}.\d{1,2}/)[0].replace("年", " ").replace("月", " ").split(" ")
+            let d = new Date(year = a[0], monthIndex = a[1] - 1, day = a[2]);
+            d.setMonth(d.getMonth() + 3)
+            let txt1 = "还书时间：" + d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";                    // 以 HTML 创建新元素
+            $("div#" + bcid).children("div#1").children("div#returndate").text(txt1)
+        }
+
+        function returnChangeHTML(bcid) {
+            let d = new Date();
+            let txt1 = "还书时间：" + d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+            $("div#" + bcid).children("div#1").children("div#returndate").text(txt1)
+            $("div#" + bcid).children("div#2").html("<div class='col-md-4'> 已还书 </div>")
+        }
+
+        function bookRenew(bcid) {
+            $.ajax({
+                url: {% url 'mybooks-renew' %},
+                type: "post",
+                data: {
+                    "bcid": bcid
+                },
+                dataType: 'json',
+                timeout: 20000,
+                success: function (data) {
+                    if (data["result"] === "success") {
+                        renewChangeHTML(bcid)
+                    }
+                    showalert(data["message"], data["result"], bcid)
+                },
+                error: function (e) {
+                    alert("错误");
+                }
+            })
+        }
+
+        function bookReturn(bcid) {
+            $.ajax({
+                url: {% url 'mybooks-return' %},
+                type: "post",
+                data: {
+                    "bcid": bcid
+                },
+                dataType: 'json',
+                timeout: 20000,
+                success: function (data) {
+                    if (data["result"] === "success") {
+                        returnChangeHTML(bcid)
+                    }
+                    showalert(data["message"], data["result"], bcid)
+                },
+                error: function (e) {
+                    alert("错误");
+                }
+            })
+        }
+
         $(document).ready(function () {
             $(".btn.btn-primary").click(function () {
-                {#$("#btn btn-primary").click(function () {#}
                 let bcid = this.id
                 if ($(this).attr("actionstatus") === "renew") {
-                    $.ajax({
-                        url: {% url 'mybooks-renew' %},
-                        type: "post",
-                        data: {
-                            "bcid": this.id
-                        },
-                        dataType: 'json',
-                        {#timeout: 20000,#}
-                        success: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert(data["message"])#}
-                            showalert(data["message"], data["result"], bcid)
-                        },
-                        complete: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert("超时")#}
-                        },
-                        error: function (e) {
-                            alert("错误");
-                            {#window.clearInterval(timer)#}
-                        }
-                    })
+                    bookRenew(bcid)
                 } else {
-                    $.ajax({
-                        url: {% url 'mybooks-return' %},
-                        type: "post",
-                        data: {
-                            "bcid": this.id
-                        },
-                        dataType: 'json',
-                        timeout: 20000,
-                        success: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#if(data['result'] === 'success'){#}
-                            {#    alert()#}
-                            {#alert(data["message"])#}
-                            showalert(data["message"], data["result"], bcid)
-                        },
-                        complete: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert("超时")#}
-                        },
-                        error: function (e) {
-                            alert("错误");
-                            {#window.clearInterval(timer)#}
-                        }
-                    })
+                    bookReturn(bcid)
                 }
-
             })
         })
     </script>

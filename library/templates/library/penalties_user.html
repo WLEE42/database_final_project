@@ -11,12 +11,7 @@
                 <li>
                     <hr>
                     <div id="alert_placeholder{{ penalty_record.pid }}"></div>
-                    {#                    <p>#}
-                    {#                        <a href="{% url 'book-detail' penalty_record.bookcopy.book.bid %}">{{ penalty_record.bookcopy.book.bname }}#}
-                    {#                            ({{ penalty_record.bookcopy.book.bauthor }})#}
-                    {#                        </a>#}
-                    {#                    </p>#}
-                    <div class="row">
+                    <div class="row" id="div{{ penalty_record.pid }}">
                         <div class="col-md-4">
                             金额：{{ penalty_record.pemoney }}
                         </div>
@@ -24,10 +19,14 @@
                             罚款日期：{{ penalty_record.pedate }}
                         </div>
                         {% if penalty_record.isfinished %}
-                            <p>已交罚金</p>
+                            <div class="col-md-4">
+                                已交罚金
+                            </div>
                             </div>
                         {% else %}
-                            <p>未交罚金</p>
+                            <div class="col-md-4" id="penalty">
+                                未交罚金
+                            </div>
                             </div>
                             <button class="btn btn-primary" id="{{ penalty_record.pid }}">
                                 交钱
@@ -44,6 +43,11 @@
 
 {% block script %}
     <script>
+        function penaltyChangeHTML(pid) {
+            $("button#" + pid).remove()
+            $("div#div" + pid).children("div#penalty").text("已交罚金")
+        }
+
         $(document).ready(function () {
             $(".btn.btn-primary").click(function () {
                 let pid = this.id
@@ -56,18 +60,13 @@
                     dataType: 'json',
                     timeout: 20000,
                     success: function (data) {
-                        {#window.clearInterval(timer)#}
-                        {#alert("归还成功" + data['message'])#}
-                        {#alert(data["message"])#}
+                        if (data["result"] === "success") {
+                            penaltyChangeHTML(pid)
+                        }
                         showalert(data["message"], data["result"], pid)
                     },
-                    complete: function (data) {
-                        {#window.clearInterval(timer)#}
-                        {#alert("超时")#}
-                    },
                     error: function (e) {
-                        alert("错误" + e);
-                        {#window.clearInterval(timer)#}
+                        alert("错误");
                     }
                 })
             })

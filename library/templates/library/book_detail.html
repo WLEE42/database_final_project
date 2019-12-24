@@ -14,102 +14,93 @@
         {% for copy in book.bookcopy.all %}
             <hr>
             <div id="alert_placeholder{{ copy.bcid }}"></div>
-            <p class="{% if copy.status == 'a' %}text-success {% elif copy.status == 'm' %}text-danger {% else %}text-warning {% endif %}">
-                {{ copy.get_status_display }}
-            </p>
-            {% if copy.status == 'o' %}
-                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
-                <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
-                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
-            {% endif %}
-            {% if copy.status == 'r' %}
-                {#                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>#}
-                <p><strong>已预约，未借走</strong></p>
-                <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
-                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
-            {% endif %}
-            {% if copy.status == 'a' %}
-                <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
-                <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="a">借书</button>
-            {% endif %}
+            <div id="{{ copy.bcid }}">
+                <p class="{% if copy.status == 'a' %}text-success {% elif copy.status == 'm' %}text-danger {% else %}text-warning {% endif %}">
+                    {{ copy.get_status_display }}
+                </p>
+                {% if copy.status == 'o' %}
+                    <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>
+                    <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
+                    <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
+                {% endif %}
+                {% if copy.status == 'r' %}
+                    {#                <p><strong>归还日期：</strong> {{ copy.borrow.all.0.returndate }}</p>#}
+                    <p><strong>已预约，未借走</strong></p>
+                    <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
+                    <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="o">预约</button>
+                {% endif %}
+                {% if copy.status == 'a' %}
+                    <p class="text-muted"><strong>位置：</strong> {{ copy.room }}</p>
+                    <button class="btn btn-primary" type="button" id="{{ copy.bcid }}" bookstatus="a">借书</button>
+                {% endif %}
+            </div>
         {% endfor %}
     </div>
 {% endblock %}
 
 {% block script %}
     <script>
-        /**
-         Bootstrap Alerts -
-         Function Name - showalert()
-         Inputs - message,alerttype
-         Example - showalert("Invalid Login","alert-error")
-         Types of alerts -- "alert-error","alert-success","alert-info","alert-warning"
-         Required - You only need to add a alert_placeholder div in your html page wherever you want to display these alerts "<div id="alert_placeholder"></div>"
-         Written On - 14-Jun-2013
-         **/
+        function borrowChangeHTML(bcid) {
+            let d = new Date();
+            d.setMonth(d.getMonth() + 3)
+            let txt1 = "<p><strong>归还日期：</strong> " + d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日</p>";                    // 以 HTML 创建新元素
+            $("div#" + bcid).children("p.text-success").after(txt1).attr("class", "text-warning").text("On loan")
+            $("div#" + bcid).children("button#" + bcid).attr("bookstatus", "o").text("预约")
+        }
 
+        function bookborrow(bcid) {
+            $.ajax({
+                url: "{% url 'book-borrow' %}",
+                type: "post",
+                data: {
+                    "bookcopy": bcid
+                },
+                dataType: 'json',
+                timeout: 20000,
+                success: function (data) {
+                    if (data["result"] === "success") {
+                        borrowChangeHTML(bcid)
+                    }
+                    showalert(data["message"], data["result"], bcid)
+                },
+                error: function (jqXHR, textStatus, err) {
+                    // jqXHR: jQuery增强的xhr
+                    // textStatus: 请求完成状态
+                    // err: 底层通过throw抛出的异常对象，值与错误类型有关
+                    alert("错误\n" + textStatus);
+                }
+            })
+        }
+
+        function bookreserve(bcid) {
+            $.ajax({
+                url: "{% url 'book-reserve' %}",
+                type: "post",
+                data: {
+                    "bcid": bcid
+                },
+                dataType: 'json',
+                timeout: 20000,
+                success: function (data) {
+                    showalert(data["message"], data["result"], bcid)
+                },
+                error: function (jqXHR, textStatus, err) {
+                    // jqXHR: jQuery增强的xhr
+                    // textStatus: 请求完成状态
+                    // err: 底层通过throw抛出的异常对象，值与错误类型有关
+                    alert("错误" + jqXHR['error']);
+                }
+            })
+        }
 
         $(document).ready(function () {
             $(".btn.btn-primary").click(function () {
-                {#$("#btn btn-primary").click(function () {#}
                 let bcid = this.id
                 if ($(this).attr("bookstatus") === "a") {
-                    $.ajax({
-                        url: "{% url 'book-borrow' %}",
-                        type: "post",
-                        data: {
-                            "bookcopy": this.id
-                        },
-                        dataType: 'json',
-                        timeout: 20000,
-                        success: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert("借书成功" + data['message'])#}
-                            {#$('#toast').toast('show')#}
-                            {#alert(data["message"])#}
-                            showalert(data["message"], data["result"], bcid)
-                        },
-                        complete: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert("超时")#}
-                        },
-                        error: function (jqXHR, textStatus, err) {
-                            // jqXHR: jQuery增强的xhr
-                            // textStatus: 请求完成状态
-                            // err: 底层通过throw抛出的异常对象，值与错误类型有关
-                            alert("错误" + e['error']);
-                            {#window.clearInterval(timer)#}
-                        }
-                    })
+                    bookborrow(bcid)
                 } else {
-                    $.ajax({
-                        url: "{% url 'book-reserve' %}",
-                        type: "post",
-                        data: {
-                            "bcid": this.id
-                        },
-                        dataType: 'json',
-                        timeout: 20000,
-                        success: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert("预约成功" + data['message'])#}
-                            showalert(data["message"], data["result"], bcid)
-                            {#alert(data["message"])#}
-                        },
-                        complete: function (data) {
-                            {#window.clearInterval(timer)#}
-                            {#alert("超时"+data)#}
-                        },
-                        error: function (jqXHR, textStatus, err) {
-                            // jqXHR: jQuery增强的xhr
-                            // textStatus: 请求完成状态
-                            // err: 底层通过throw抛出的异常对象，值与错误类型有关
-                            alert("错误" + jqXHR['error']);
-                            {#window.clearInterval(timer)#}
-                        }
-                    })
+                    bookreserve(bcid)
                 }
-
             })
         })
     </script>

@@ -5,33 +5,55 @@
     <h1>我的预约</h1>
 
     {% if reserve_list %}
-        <ul>
-            {% for reserve_record in reserve_list %}
-                <li>
-                    <hr>
-                    <div id="alert_placeholder{{ reserve_record.reid }}"></div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            {{ reserve_record.book.bname }}
-                        </div>
-                        <div class="col-md-4">
-                            {{ reserve_record.book.bauthor }}
-                        </div>
-                        <div class="col-md-4">
-                            {{ reserve_record.adddate }}
-                        </div>
+        {#        <ul>#}
+        {% for reserve_record in reserve_list %}
+            {#                <li>#}
+            <hr>
+            <div id="alert_placeholder{{ reserve_record.reid }}"></div>
+            <div class="row">
+                <div class="col-md-4">
+                    {{ reserve_record.book.bname }}
+                </div>
+                <div class="col-md-4">
+                    {{ reserve_record.book.bauthor }}
+                </div>
+                <div class="col-md-4">
+                    预计可用时间：{{ reserve_record.startdate }}
+                </div>
+            </div>
+            <div class="row" id="{{ reserve_record.reid }}">
+                {% if reserve_record.status == "b_w" %}
+                    <div class="col-md-4">
+                        书籍暂不可用
                     </div>
-                    {% if reserve_record.isbookavailable %}
-                        <p>书籍可以借阅</p>
-                        <button class="btn btn-primary" id="{{ reserve_record.pid }}">
+                    <div class="col-md-4">
+                        请耐心等待
+                    </div>
+                {% elif reserve_record.status == "a_a" %}
+                    <div class="col-md-4">
+                        书籍可以借阅
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" id="{{ reserve_record.reid }}">
                             借阅
                         </button>
-                    {% else %}
-                        <p>书籍不可借阅</p>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+                    </div>
+                {% elif reserve_record.status == "d_f" %}
+                    <div class="col-md-4">
+                        书籍已借出
+                    </div>
+                    <div class="col-md-4">
+                        预约完成
+                    </div>
+                {% else %}
+                    <div class="col-md-4">
+                        预约已过期
+                    </div>
+                {% endif %}
+            </div>
+            {#                </li>#}
+        {% endfor %}
+        {#        </ul>#}
 
     {% else %}
         <p>没有借书。</p>
@@ -40,6 +62,10 @@
 
 {% block script %}
     <script>
+        function reserveChangeHTML(reid) {
+            $("div#" + reid).html("<div class='col-md-4'> 书籍已借出 </div> <div class='col-md-4'> 预约完成 </div>")
+        }
+
         $(document).ready(function () {
             $(".btn.btn-primary").click(function () {
                 let reid = this.id
@@ -52,19 +78,14 @@
                     dataType: 'json',
                     timeout: 20000,
                     success: function (data) {
-                        {#window.clearInterval(timer)#}
-                        {#alert("归还成功" + data)#}
-                        {#alert(data["message"])#}
-                        {#showalert(data["message"], data["result"])#}
+                        if (data["result"] === "success") {
+                            reserveChangeHTML(reid)
+                        }
                         showalert(data["message"], data["result"], reid)
-                    },
-                    complete: function (data) {
-                        {#window.clearInterval(timer)#}
-                        {#alert("超时")#}
-                    },
+                    }
+                    ,
                     error: function (e) {
-                        {#alert("错误" + e);#}
-                        {#window.clearInterval(timer)#}
+                        alert("错误");
                     }
                 })
             })
