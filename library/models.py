@@ -58,6 +58,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Room(models.Model):
     """Reading Room"""
 
+    class Meta:
+        verbose_name = "阅览室"
+
     # Fields
     rid = models.AutoField(max_length=4, primary_key=True, verbose_name='阅览室编号')
     rpos = models.CharField(max_length=30, verbose_name='阅览室位置')
@@ -72,6 +75,7 @@ class Book(models.Model):
 
     class Meta:
         ordering = ["bname"]
+        verbose_name = "书籍"
 
     # Fields
     bid = models.AutoField(max_length=10, primary_key=True)
@@ -95,6 +99,7 @@ class Bookcopy(models.Model):
 
     class Meta:
         ordering = ['status']
+        verbose_name = "书册"
 
     # Fields
     bcid = models.UUIDField(primary_key=True, default=uuid.uuid4,
@@ -120,6 +125,7 @@ class Borrow(models.Model):
     class Meta:
         get_latest_by = "returndate"
         ordering = ["isfinished", "-returndate"]
+        verbose_name = "借阅记录"
 
     boid = models.AutoField(max_length=15, primary_key=True)
     lenddate = models.DateField(default=now, verbose_name="借出时间")
@@ -139,6 +145,7 @@ class Penalty(models.Model):
     class Meta:
         get_latest_by = "pedate"
         ordering = ["isfinished", "pedate"]
+        verbose_name = "罚款记录"
 
     pid = models.AutoField(max_length=10, primary_key=True)
     pemoney = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="罚款金额")
@@ -158,6 +165,7 @@ class Reserve(models.Model):
     class Meta:
         get_latest_by = "adddate"
         ordering = ["status", "adddate"]
+        verbose_name = "预约记录"
 
     reid = models.AutoField(max_length=10, primary_key=True)
     adddate = models.DateField(verbose_name="添加预约的时间", default=now)

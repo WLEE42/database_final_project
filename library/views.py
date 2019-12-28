@@ -17,6 +17,7 @@ from .models import *
 
 
 def index(request):
+    """主页，图书馆基础信息"""
     num_books = Bookcopy.objects.all().count()
     num_borrowed_books = Bookcopy.objects.filter(status='r').count() + Bookcopy.objects.filter(status='o').count()
     num_in_books = Bookcopy.objects.filter(status='a').count()
@@ -27,6 +28,7 @@ def index(request):
 
 
 class register(generic.FormView):
+    """用户注册"""
     template_name = "library/register.html"
     form_class = CustomUserCreationForm
     success_url = "/accounts/login"
@@ -41,21 +43,23 @@ class register(generic.FormView):
 
 
 class BookListView(generic.ListView):
+    """书籍列表"""
     model = Book
     paginate_by = 10
 
 
 class BookDetailView(LoginRequiredMixin, generic.DetailView):
+    """书籍详细信息"""
     # permission_required = ('book.can_look_detail',)
     model = Book
 
 
 class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
+    """用户借书列表"""
     model = Borrow
     paginate_by = 10
     template_name = 'library/bookcopy_borrowed_user.html'
 
-    # borrow_list = request.
     def get_context_data(self, **kwargs):
         context = super(LoanedBooksByUserListView, self).get_context_data(**kwargs)
         for borrow_record in Borrow.objects.filter(user_id__exact=self.request.user.id).filter(isfinished__exact=False):
@@ -75,6 +79,7 @@ class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
 
 
 class Penalties(LoginRequiredMixin, generic.ListView):
+    """用户罚款列表"""
     model = Penalty
     paginate_by = 10
     template_name = 'library/penalties_user.html'
@@ -97,6 +102,7 @@ class Penalties(LoginRequiredMixin, generic.ListView):
 
 
 class ReservedBook(LoginRequiredMixin, generic.ListView):
+    """用户预约列表"""
     model = Reserve
     paginate_by = 10
     template_name = 'library/reserves_user.html'
@@ -112,11 +118,12 @@ class ReservedBook(LoginRequiredMixin, generic.ListView):
 
 @login_required
 def book_reserve(request):
-    """书籍预约"""
+    """书籍预约api"""
     if request.method == "POST":
         try:
             bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
         except Bookcopy.DoesNotExist:
+            # 书籍不存在
             response = JsonResponse({"result": "warning", "message": "书籍不存在"})
             return response
         if Bookcopy.objects.filter(book=bookcopy.book).filter(status="a").exists():
@@ -146,13 +153,12 @@ def book_reserve(request):
             response = JsonResponse({"result": "success", "message": "预约成功"})
         else:
             response = JsonResponse({"result": "warning", "message": "书籍状态不可预约"})
-            # response.status_code = 403
         return response
 
 
 @login_required
 def book_borrow(request):
-    """书籍借阅"""
+    """书籍借阅api"""
     if request.method == "POST":
         form = BorrowForm(request.POST)
         if form.is_valid():
@@ -174,11 +180,12 @@ def book_borrow(request):
                 response = JsonResponse({"result": "warning", "message": "书籍不可用"})
         else:
             response = JsonResponse({"result": "warning", "message": "bookcopy bcid不正确"})
-    return response
+        return response
 
 
 @login_required
 def mybooks_renew(request):
+    """书籍续订api"""
     if request.method == "POST":
         borrow = Borrow.objects.filter(isfinished__exact=False).get(bookcopy__bcid__exact=request.POST['bcid'])
         try:
@@ -199,6 +206,7 @@ def mybooks_renew(request):
 
 @login_required
 def mybooks_return(request):
+    """书籍归还api"""
     if request.method == "POST":
         bookcopy = Bookcopy.objects.get(bcid__exact=request.POST['bcid'])
         if bookcopy.status == "o":
@@ -234,6 +242,7 @@ def mybooks_return(request):
 
 @login_required
 def reserve_borrow(request):
+    """预约记录完成借书api"""
     if request.method == "POST":
         try:
             reserve = Reserve.objects.get(reid__exact=request.POST['reid'])
@@ -264,15 +273,16 @@ def reserve_borrow(request):
 
 @login_required
 def penalty_pay(request):
+    """支付罚款"""
     if request.method == "POST":
         try:
             penalty = Penalty.objects.get(pid__exact=request.POST['pid'])
         except Penalty.DoesNotExist:
             response = JsonResponse({"result": "warning", "message": "记录不存在"})
             return response
-        if penalty.isfinished == True:
+        if penalty.isfinished:
             response = JsonResponse({"result": "warning", "message": "罚款已缴纳"})
-        elif penalty.borrow.isfinished == False:
+        elif not penalty.borrow.isfinished:
             response = JsonResponse({"result": "warning", "message": "请先还书"})
         else:
             penalty.isfinished = True
