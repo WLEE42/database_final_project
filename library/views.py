@@ -258,7 +258,7 @@ def reserve_borrow(request):
         else:
             reserve.status = "d_f"
             # 预约完成借阅
-            bookcopy = reserve.book.bookcopy_set.filter(status='r').first()
+            bookcopy = reserve.book.bookcopy.filter(status='r').first()
             # first()指被预约的bookcopy中的任意一个
             bookcopy.status = 'o'
             # 更新bookcopy的status
